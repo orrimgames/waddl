@@ -38,6 +38,7 @@
   </div>
 </div>
 
+<script src="assets/b64.js"></script>
 <script type="importmap">
 {"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
 </script>
@@ -84,7 +85,7 @@ let rig = new THREE.Group(); scene.add(rig);
 let parts = {};
 let state = { waddle:false, flap:0, spin:0, blink:0, nextBlink: 2.5, phase: 0 };
 
-new GLTFLoader().load('assets/pip.glb', (g)=>{
+new GLTFLoader().parse(glbBytes(), '', (g)=>{
   const model = g.scene;
   model.traverse(o=>{
     if(o.isMesh){
@@ -98,7 +99,7 @@ new GLTFLoader().load('assets/pip.glb', (g)=>{
   rig.add(model);
   ['wing_l','wing_r','foot_l','foot_r','eye_l','eye_r'].forEach(n=>{ parts[n] = model.getObjectByName(n); });
   document.getElementById('loading').remove();
-}, undefined, ()=>{ document.getElementById('loading').textContent = 'could not load pip.glb'; });
+}, ()=>{ document.getElementById('loading').textContent = 'could not load pip model'; });
 
 const clock = new THREE.Clock();
 function tick(){
