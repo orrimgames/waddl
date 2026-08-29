@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Waddl - tiny robots with big feelings</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<nav><div class="wrap">
+  <span class="logo">waddl<b>.</b></span>
+  <a class="nl" href="index.html">Home</a>
+  <a class="nl" href="robot.html">Pip, our first robot</a>
+  <a class="nl" href="sim.html">Sim</a>
+  <a class="nl" href="bom.html">Prototype plan</a>
+</div></nav>
+
+<header class="wrap hero">
+  <div>
+    <h1>Tiny robots<br>with <b>big feelings</b>.</h1>
+    <p class="sub">Waddl is a small robotics studio with one goal: a cute companion robot that anyone can afford. Our first bot is Pip - a duckling that waddles, flaps, and keeps you company at your desk.</p>
+    <a class="btn" href="robot.html">Meet Pip</a>
+    <a class="btn ghost" href="sim.html">Play with the sim</a>
+  </div>
+  <img src="assets/renders/pip_threequarter.png" alt="Pip, a small cream-colored duck robot with a dark glass face, glowing eyes, orange beak and feet">
+</header>
+
+<section class="wrap">
+  <h2>Why Waddl exists</h2>
+  <p class="lede">Companion robots are the best category in consumer robotics, and they're priced like luxury goods. We think the cute robot pet should cost less than a video game console. So we're building one ourselves, in the open, one cheap servo at a time.</p>
+  <div class="grid c3">
+    <div class="card"><div class="big">$40</div><h3>Target build cost</h3><p>Pip's prototype bill of materials comes in around forty dollars. Four hobby servos, an ESP32, a battery, and a 3D-printed shell.</p></div>
+    <div class="card"><div class="big">4</div><h3>Servos, not 14</h3><p>Servo count is what drives robot cost. Pip waddles and flaps on four SG90s. Charm is free; torque is not.</p></div>
+    <div class="card"><div class="big">100%</div><h3>Open</h3><p>Every CAD file, render, sim, and build doc lives in this repo. If you have a 3D printer, you can follow along.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>The neighborhood we're moving into</h2>
+  <p class="lede">What's already out there, what it costs, and where we fit. Pip's angle: real companion character at DIY-kit pricing.</p>
+  <div class="card" style="padding:8px 24px">
+  <table>
+    <tr><th>Robot</th><th>What it is</th><th class="num">Price</th></tr>
+    <tr><td><b>Anki Vector</b></td><td>The beloved desk buddy that started the category. Company folded in 2019.</td><td class="num">$249 at launch</td></tr>
+    <tr><td><b>Eilik</b></td><td>Energize Lab's expressive desk companion. Cute, stationary, no walking.</td><td class="num">$139.99</td></tr>
+    <tr><td><b>Petoi Bittle X</b></td><td>Serious open-source robot dog. Impressive, and priced like it.</td><td class="num">$319</td></tr>
+    <tr><td><b>Otto DIY</b></td><td>The open-source builder kit that proved a cute walking bot can be cheap. Closest to our heart.</td><td class="num">$49 kit</td></tr>
+    <tr><td><b>Pip (us)</b></td><td>Duckling companion. Walks, flaps, reacts. Open CAD, sim-first design.</td><td class="num">~$40 BOM</td></tr>
+  </table>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Roadmap</h2>
+  <p class="lede">Where this goes, in order. No money moves until the plan earns it.</p>
+  <ol class="steps">
+    <li><b>Concept + sim</b> - brand, CAD concept, and a playable web sim. <span class="tag">you are here</span></li>
+    <li><b>Prototype v0</b> - print the shell, wire 4 servos to an ESP32, first waddle on a real desk. Awaiting budget approval.</li>
+    <li><b>Character pass</b> - OLED eye animations, sounds, touch reactions. This is where Pip gets a personality.</li>
+    <li><b>Kit or crowdfund</b> - if people love the prototype, package it as a build-it-yourself kit.</li>
+  </ol>
+</section>
+
+<footer><div class="wrap">
+  <span class="logo" style="font-size:16px">waddl<b>.</b></span><br><br>
+  A studio under the orrimgames umbrella. All designs open. Built with free tools: OpenSCAD, trimesh, Three.js, GitHub Pages.
+</div></footer>
+</body>
+</html>
