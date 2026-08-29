@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pip prototype plan - Waddl</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<nav><div class="wrap">
+  <span class="logo">waddl<b>.</b></span>
+  <a class="nl" href="index.html">Home</a>
+  <a class="nl" href="robot.html">Pip, our first robot</a>
+  <a class="nl" href="sim.html">Sim</a>
+  <a class="nl" href="bom.html">Prototype plan</a>
+</div></nav>
+
+<section class="wrap" style="padding-top:64px">
+  <span class="tag">Prototype v0</span><span class="tag">No money spent yet</span>
+  <h2 style="font-size:42px;margin-top:12px">The ~$40 Pip build</h2>
+  <p class="lede">Everything it takes to put a real waddling Pip on a desk. This is the approval document: nothing gets ordered until the boss says go.</p>
+  <div class="note">Servo prices verified against live listings on Aug 29, 2026 (SG90 10-pack $15.99 on Amazon). Remaining lines are typical street prices for common parts - they get re-verified line by line before any order is placed.</div>
+</section>
+
+<section class="wrap" style="padding-top:0">
+  <div class="card" style="padding:8px 24px">
+  <table>
+    <tr><th>#</th><th>Part</th><th>What it does</th><th class="num">Est. cost</th></tr>
+    <tr><td>1</td><td><b>SG90 9g micro servos, 10-pack</b> (need 4)</td><td>2 feet for the waddle gait, 2 wings for flapping. 6 spares for prototypes 2 and 3.</td><td class="num">$15.99</td></tr>
+    <tr><td>2</td><td><b>ESP32 DevKit (ESP32-WROOM-32)</b></td><td>Brain. Runs the gait, the face, the sounds. Wi-Fi/Bluetooth for free.</td><td class="num">~$7</td></tr>
+    <tr><td>3</td><td><b>0.96" OLED display, 128x64 I2C</b></td><td>The face. Two animated eyes behind the dark glass panel.</td><td class="num">~$4</td></tr>
+    <tr><td>4</td><td><b>3.7V 1000mAh LiPo battery (JST)</b></td><td>About 2-3 hours of waddling per charge.</td><td class="num">~$8</td></tr>
+    <tr><td>5</td><td><b>TP4056 USB-C charge + protection board</b></td><td>Safely charges the LiPo from any USB-C cable.</td><td class="num">~$1.50</td></tr>
+    <tr><td>6</td><td><b>Piezo buzzer</b></td><td>Peeps, chirps, tiny quacks.</td><td class="num">~$1</td></tr>
+    <tr><td>7</td><td><b>Slide switch, jumper wires, M2 screw kit</b></td><td>Power switch and the plumbing.</td><td class="num">~$5</td></tr>
+    <tr><td>8</td><td><b>PLA filament, ~150g</b> (cream + orange)</td><td>The whole shell. Prints on any entry-level printer.</td><td class="num">~$3</td></tr>
+    <tr class="total"><td></td><td><b>Total</b></td><td>rounded up for shipping / spares</td><td class="num">~$45</td></tr>
+  </table>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Build steps</h2>
+  <p class="lede">From box of parts to first waddle. Estimated a weekend.</p>
+  <ol class="steps">
+    <li><b>Print the shell.</b> pip_body_shell.stl plus feet, wings, beak, tail as separate color parts. 0.2mm layers, no supports for the egg body. About 10-12 hours of print time.</li>
+    <li><b>Seat the servos.</b> Feet servos go in the lower body, horns down into each foot. Wing servos in the mid-body, horns out the sides. SG90s come with screws in the bag.</li>
+    <li><b>Wire the brain.</b> Servo signal wires to ESP32 GPIO (18/19 feet, 21/22 wings), OLED to I2C (SDA 23, SCL 25), buzzer to GPIO 26, LiPo through the TP4056 and switch to the 5V rail.</li>
+    <li><b>Flash the firmware.</b> Arduino IDE, ESP32Servo library. First sketch: center all servos, then the waddle loop - rock, lift left foot, rock, lift right foot.</li>
+    <li><b>Wake the face.</b> OLED eye animation loop: idle look-around, blink every few seconds, wide eyes on pickup (v0.2 adds a touch sensor).</li>
+    <li><b>First waddle.</b> Feet on desk, power on, film everything.</li>
+  </ol>
+</section>
+
+<section class="wrap">
+  <h2>Known risks</h2>
+  <div class="grid c2">
+    <div class="card"><h3>Balance</h3><p>Two-foot waddlers live or die by center of mass. The sim rocks Pip 8 degrees; the real gait gets tuned on the desk. Worst case: wider feet, lower battery.</p></div>
+    <div class="card"><h3>Servo jitter on battery</h3><p>Four SG90s pulling at once can brown out a weak rail. Fix is a capacitor on the 5V line and staggering servo moves in firmware.</p></div>
+    <div class="card"><h3>Shell fit</h3><p>Concept model has no mounts yet. v0.2 CAD adds servo pockets, a board tray, and screw bosses before the first print.</p></div>
+    <div class="card"><h3>Scope</h3><p>Camera, mic, app, AI voice - all deliberately NOT in v0. Pip earns features one prototype at a time.</p></div>
+  </div>
+</section>
+
+<footer><div class="wrap">
+  <span class="logo" style="font-size:16px">waddl<b>.</b></span><br><br>
+  A studio under the orrimgames umbrella. All designs open.
+</div></footer>
+</body>
+</html>
