@@ -4,6 +4,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pip - Waddl's first robot</title>
 <link rel="stylesheet" href="assets/style.css">
+<script src="assets/b64.js"></script>
+<script>document.addEventListener("DOMContentLoaded",hydrateB64)</script>
 </head>
 <body>
 <nav><div class="wrap">
@@ -19,11 +21,11 @@
   <h2 style="font-size:48px;margin-top:12px">Meet Pip.</h2>
   <p class="lede">Pip is a palm-sized duckling robot. It waddles on two webbed feet, flaps tiny wings when it's happy, and looks at you through two glowing eyes on a dark glass face. One part pet, one part desk buddy, zero parts intimidating.</p>
   <div class="renders">
-    <figure><img src="assets/pip_front.png" alt="Pip front view"><figcaption>front</figcaption></figure>
-    <figure><img src="assets/pip_threequarter.png" alt="Pip three-quarter view"><figcaption>three-quarter</figcaption></figure>
-    <figure><img src="assets/pip_side.png" alt="Pip side view"><figcaption>side</figcaption></figure>
-    <figure><img src="assets/pip_back.png" alt="Pip back view"><figcaption>back</figcaption></figure>
-    <figure><img src="assets/pip_top.png" alt="Pip top view"><figcaption>top</figcaption></figure>
+    <figure><img data-b64="pip_front" alt="Pip front view"><figcaption>front</figcaption></figure>
+    <figure><img data-b64="pip_threequarter" alt="Pip three-quarter view"><figcaption>three-quarter</figcaption></figure>
+    <figure><img data-b64="pip_side" alt="Pip side view"><figcaption>side</figcaption></figure>
+    <figure><img data-b64="pip_back" alt="Pip back view"><figcaption>back</figcaption></figure>
+    <figure><img data-b64="pip_top" alt="Pip top view"><figcaption>top</figcaption></figure>
   </div>
 </section>
 
@@ -61,8 +63,8 @@
   <p class="lede">The concept model, in the open from day one.</p>
   <div class="grid c3">
     <div class="card"><h3>pip.scad</h3><p>Parametric OpenSCAD source. Every dimension is a variable; change the beak, re-render.</p><p><a href="cad/pip.scad">Download</a></p></div>
-    <div class="card"><h3>pip.glb</h3><p>The 3D model that powers the <a href="sim.html">web sim</a>. Built by cad/build_model.py.</p><p><a href="assets/pip.glb">Download</a></p></div>
-    <div class="card"><h3>pip_body_shell.stl</h3><p>First slice at a printable shell. Mounts for servos and board come in v0.2.</p><p><a href="cad/pip_body_shell.stl">Download</a></p></div>
+    <div class="card"><h3>pip.glb</h3><p>The 3D model that powers the <a href="sim.html">web sim</a>. Built by cad/build_model.py.</p><p>Loaded by the sim from the repo (base64). Regenerate with cad/build_model.py.</p></div>
+    <div class="card"><h3>pip_body_shell.stl</h3><p>First slice at a printable shell. Mounts for servos and board come in v0.2.</p><p>Printable shell lands in v0.2 once servo mounts exist.</p></div>
   </div>
   <p style="margin-top:24px"><a class="btn" href="sim.html">See Pip move in the sim</a></p>
 </section>
