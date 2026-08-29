@@ -16,7 +16,7 @@
 
 <section class="wrap" style="padding-top:64px">
   <span class="tag">Prototype v0</span><span class="tag">No money spent yet</span>
-  <h2 style="font-size:42px;margin-top:12px">The ~$40 Pip build</h2>
+  <h2 style="font-size:42px;margin-top:12px">The ~$45 Pip build</h2>
   <p class="lede">Everything it takes to put a real waddling Pip on a desk. This is the approval document: nothing gets ordered until the boss says go.</p>
   <div class="note">Servo prices verified against live listings on Aug 29, 2026 (SG90 10-pack $15.99 on Amazon). Remaining lines are typical street prices for common parts - they get re-verified line by line before any order is placed.</div>
 </section>
@@ -49,6 +49,22 @@
     <li><b>Wake the face.</b> OLED eye animation loop: idle look-around, blink every few seconds, wide eyes on pickup (v0.2 adds a touch sensor).</li>
     <li><b>First waddle.</b> Feet on desk, power on, film everything.</li>
   </ol>
+</section>
+
+
+<section class="wrap">
+  <h2>Conversation: pick a tier</h2>
+  <p class="lede">The boss wants Pip to talk, and Pip never phones home. No cloud, no subscription, no account - whatever Pip hears stays inside Pip. Three ways to get there, cheap to fancy. All prices to re-verify at order time.</p>
+  <div class="card" style="padding:8px 24px">
+  <table>
+    <tr><th>Tier</th><th>What Pip can do</th><th>Extra parts</th><th class="num">Adds</th></tr>
+    <tr><td><b>0 - Personality</b><br>(in the base $45)</td><td>Dozens of preloaded moods, peeps and phrases. Reacts to touch and sound with OLED faces and chirps. No listening.</td><td>Nothing - runs on the ESP32</td><td class="num">$0</td></tr>
+    <tr><td><b>A - Keyword ears</b></td><td>Hears wake words and a handful of commands ("hey Pip", "dance", "sleep") spotted on-device with ESP-SR / microWakeWord. Answers with canned chirps and OLED text.</td><td>INMP441 I2S mic (~$3)</td><td class="num">~$3</td></tr>
+    <tr><td><b>B - Real talk</b></td><td>Actual conversations, fully on-device: whisper.cpp (tiny) for speech-to-text, Piper for text-to-speech, small local language model for personality. Slower to think, but it never needs the internet.</td><td>Pi Zero 2 W ($15 list) + mic (~$6) + speaker (~$6) + microSD (~$6) + bigger battery (~$4)</td><td class="num">~$37</td></tr>
+    <tr class="total"><td></td><td><b>Totals</b></td><td>Tier 0: ~$45 &middot; Tier A: ~$48 &middot; Tier B: ~$82</td><td class="num"></td></tr>
+  </table>
+  </div>
+  <p class="lede" style="margin-top:18px">Recommendation: build Tier A first (weekend project, same shell). Tier B drops into the same body later - the Pi Zero 2 W rides alongside the ESP32, which keeps doing servo duty.</p>
 </section>
 
 <section class="wrap">
