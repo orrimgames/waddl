@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pip - Waddl's first robot</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<nav><div class="wrap">
+  <span class="logo">waddl<b>.</b></span>
+  <a class="nl" href="index.html">Home</a>
+  <a class="nl" href="robot.html">Pip, our first robot</a>
+  <a class="nl" href="sim.html">Sim</a>
+  <a class="nl" href="bom.html">Prototype plan</a>
+</div></nav>
+
+<section class="wrap" style="padding-top:64px">
+  <span class="tag">Concept v0.1</span><span class="tag">Duckling companion</span>
+  <h2 style="font-size:48px;margin-top:12px">Meet Pip.</h2>
+  <p class="lede">Pip is a palm-sized duckling robot. It waddles on two webbed feet, flaps tiny wings when it's happy, and looks at you through two glowing eyes on a dark glass face. One part pet, one part desk buddy, zero parts intimidating.</p>
+  <div class="renders">
+    <figure><img src="assets/renders/pip_front.png" alt="Pip front view"><figcaption>front</figcaption></figure>
+    <figure><img src="assets/renders/pip_threequarter.png" alt="Pip three-quarter view"><figcaption>three-quarter</figcaption></figure>
+    <figure><img src="assets/renders/pip_side.png" alt="Pip side view"><figcaption>side</figcaption></figure>
+    <figure><img src="assets/renders/pip_back.png" alt="Pip back view"><figcaption>back</figcaption></figure>
+    <figure><img src="assets/renders/pip_top.png" alt="Pip top view"><figcaption>top</figcaption></figure>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>The idea</h2>
+  <p class="lede">Every design decision is a fight between cute and cost. Cute wins ties.</p>
+  <div class="grid c2">
+    <div class="card"><h3>The face is the product</h3><p>A dark glass panel with two glowing eyes, driven by a cheap 0.96" OLED. Blinking, looking around, going wide when you pick Pip up. Eilik proved people bond with the face; everything else is supporting cast.</p></div>
+    <div class="card"><h3>Waddle, don't walk</h3><p>Walking robots need lots of servos. Waddling needs two: rock side to side, lift a foot, fall forward adorably. Duck anatomy is a cost-saving feature.</p></div>
+    <div class="card"><h3>Wings for emotion</h3><p>Two more servos in the wings. A happy flap, a shy droop, an angry flutter. Four servos total, and Pip can act.</p></div>
+    <div class="card"><h3>Egg-simple shell</h3><p>The body is basically an egg with feet. One main print, small add-ons, no exotic geometry. Any entry-level 3D printer can make a Pip.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Specs, concept stage</h2>
+  <div class="card" style="padding:8px 24px">
+  <table>
+    <tr><th>Item</th><th>Pip v0.1</th></tr>
+    <tr><td><b>Height</b></td><td>~19 cm (concept scale, tune before print)</td></tr>
+    <tr><td><b>Brain</b></td><td>ESP32 dev board (Wi-Fi + Bluetooth built in)</td></tr>
+    <tr><td><b>Muscles</b></td><td>4x SG90 9g micro servos: 2 feet, 2 wings</td></tr>
+    <tr><td><b>Face</b></td><td>0.96" OLED, 128x64, two animated eyes</td></tr>
+    <tr><td><b>Voice</b></td><td>Piezo buzzer - peeps, chirps, tiny quacks</td></tr>
+    <tr><td><b>Power</b></td><td>3.7V LiPo, USB-C charging module</td></tr>
+    <tr><td><b>Shell</b></td><td>PLA, ~150g of filament, cream + orange</td></tr>
+    <tr><td><b>Build cost</b></td><td>~$40 (<a href="bom.html">full breakdown</a>)</td></tr>
+  </table>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>CAD files</h2>
+  <p class="lede">The concept model, in the open from day one.</p>
+  <div class="grid c3">
+    <div class="card"><h3>pip.scad</h3><p>Parametric OpenSCAD source. Every dimension is a variable; change the beak, re-render.</p><p><a href="cad/pip.scad">Download</a></p></div>
+    <div class="card"><h3>pip.glb</h3><p>The 3D model that powers the <a href="sim.html">web sim</a>. Built by cad/build_model.py.</p><p><a href="assets/pip.glb">Download</a></p></div>
+    <div class="card"><h3>pip_body_shell.stl</h3><p>First slice at a printable shell. Mounts for servos and board come in v0.2.</p><p><a href="cad/pip_body_shell.stl">Download</a></p></div>
+  </div>
+  <p style="margin-top:24px"><a class="btn" href="sim.html">See Pip move in the sim</a></p>
+</section>
+
+<footer><div class="wrap">
+  <span class="logo" style="font-size:16px">waddl<b>.</b></span><br><br>
+  A studio under the orrimgames umbrella. All designs open.
+</div></footer>
+</body>
+</html>
