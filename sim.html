@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pip sim - Waddl</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  body{overflow-x:hidden}
+  #stage{position:relative;height:calc(100vh - 60px);min-height:520px}
+  canvas{display:block}
+  #hud{position:absolute;left:24px;bottom:24px;display:flex;gap:10px;flex-wrap:wrap}
+  #hud button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:11px 22px;font-size:14px;font-weight:700;cursor:pointer}
+  #hud button:hover{border-color:var(--accent);color:var(--accent)}
+  #hud button.on{background:var(--accent);color:#1a1206;border-color:var(--accent)}
+  #title{position:absolute;left:24px;top:20px;pointer-events:none}
+  #title h1{font-size:26px;letter-spacing:-.5px}
+  #title p{color:var(--muted);font-size:13px}
+  #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <span class="logo">waddl<b>.</b></span>
+  <a class="nl" href="index.html">Home</a>
+  <a class="nl" href="robot.html">Pip, our first robot</a>
+  <a class="nl" href="sim.html">Sim</a>
+  <a class="nl" href="bom.html">Prototype plan</a>
+</div></nav>
+
+<div id="stage">
+  <div id="title"><h1>Pip, alive-ish</h1><p>drag to orbit &middot; scroll to zoom &middot; buttons make Pip do things</p></div>
+  <div id="loading">loading pip.glb ...</div>
+  <div id="hud">
+    <button id="bWaddle">waddle</button>
+    <button id="bFlap">happy flap</button>
+    <button id="bSpin">spin</button>
+    <button id="bBlink">blink</button>
+  </div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(stage.clientWidth, stage.clientHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0e1320);
+scene.fog = new THREE.Fog(0x0e1320, 60, 140);
+
+const camera = new THREE.PerspectiveCamera(38, stage.clientWidth/stage.clientHeight, 0.1, 500);
+camera.position.set(26, 20, 34);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 9, 0);
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI/2 + 0.05;
+controls.minDistance = 15; controls.maxDistance = 90;
+
+scene.add(new THREE.HemisphereLight(0xfff4e0, 0x1a2138, 1.15));
+const sun = new THREE.DirectionalLight(0xffe8c0, 2.2);
+sun.position.set(18, 30, 14);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-25; sun.shadow.camera.right=25; sun.shadow.camera.top=25; sun.shadow.camera.bottom=-25;
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0x5ae1ff, 0.7); rim.position.set(-20, 12, -18); scene.add(rim);
+
+const ground = new THREE.Mesh(new THREE.CircleGeometry(60, 48), new THREE.MeshStandardMaterial({color:0x141b2c, roughness:1}));
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+const pad = new THREE.Mesh(new THREE.CircleGeometry(16, 48), new THREE.MeshStandardMaterial({color:0x1c2539, roughness:.9}));
+pad.rotation.x = -Math.PI/2; pad.position.y = 0.01; pad.receiveShadow = true; scene.add(pad);
+
+let rig = new THREE.Group(); scene.add(rig);
+let parts = {};
+let state = { waddle:false, flap:0, spin:0, blink:0, nextBlink: 2.5, phase: 0 };
+
+new GLTFLoader().load('assets/pip.glb', (g)=>{
+  const model = g.scene;
+  model.traverse(o=>{
+    if(o.isMesh){
+      o.castShadow = true; o.receiveShadow = false;
+      const n = (o.name||'').toLowerCase();
+      if(n.includes('eye')) o.material = new THREE.MeshStandardMaterial({color:0x0d2a33, emissive:0x5ae1ff, emissiveIntensity:1.6, roughness:.3});
+      else if(n.includes('face')) o.material = new THREE.MeshStandardMaterial({color:0x14181f, roughness:.15, metalness:.4});
+      else o.material = new THREE.MeshStandardMaterial({vertexColors:true, roughness:.65});
+    }
+  });
+  rig.add(model);
+  ['wing_l','wing_r','foot_l','foot_r','eye_l','eye_r'].forEach(n=>{ parts[n] = model.getObjectByName(n); });
+  document.getElementById('loading').remove();
+}, undefined, ()=>{ document.getElementById('loading').textContent = 'could not load pip.glb'; });
+
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  controls.update();
+
+  if(state.waddle){
+    state.phase += dt*7;
+    const p = state.phase;
+    rig.rotation.z = Math.sin(p)*0.14;
+    rig.position.y = Math.abs(Math.cos(p))*0.7;
+    rig.position.x = Math.sin(t*0.6)*4*0;  // stays on the pad for now
+    if(parts.foot_l) parts.foot_l.position.y = Math.max(0, Math.sin(p))*1.6;
+    if(parts.foot_r) parts.foot_r.position.y = Math.max(0,-Math.sin(p))*1.6;
+    if(parts.wing_l) parts.wing_l.rotation.z = 0.15+Math.sin(p)*0.1;
+    if(parts.wing_r) parts.wing_r.rotation.z = -0.15-Math.sin(p)*0.1;
+  } else {
+    rig.rotation.z *= 0.9;
+    rig.position.y = Math.sin(t*2)*0.12 + 0.12;   // breathing bob
+    if(parts.foot_l) parts.foot_l.position.y *= 0.85;
+    if(parts.foot_r) parts.foot_r.position.y *= 0.85;
+    if(parts.wing_l) parts.wing_l.rotation.z *= 0.9;
+    if(parts.wing_r) parts.wing_r.rotation.z *= 0.9;
+  }
+
+  if(state.flap > 0){
+    state.flap -= dt;
+    const f = Math.sin(t*28)*0.9;
+    if(parts.wing_l) parts.wing_l.rotation.z = 0.5+f;
+    if(parts.wing_r) parts.wing_r.rotation.z = -0.5-f;
+  }
+  if(state.spin > 0){
+    state.spin -= dt;
+    rig.rotation.y += dt*9;
+    if(state.spin <= 0) rig.rotation.y = rig.rotation.y % (Math.PI*2);
+  }
+
+  state.nextBlink -= dt;
+  if(state.nextBlink <= 0){ state.blink = 0.16; state.nextBlink = 2 + Math.random()*3.5; }
+  if(state.blink > 0){
+    state.blink -= dt;
+    const k = Math.max(0.06, Math.abs(state.blink/0.16*2-1));
+    if(parts.eye_l) parts.eye_l.scale.y = k;
+    if(parts.eye_r) parts.eye_r.scale.y = k;
+  } else {
+    if(parts.eye_l) parts.eye_l.scale.y = 1;
+    if(parts.eye_r) parts.eye_r.scale.y = 1;
+  }
+
+  renderer.render(scene, camera);
+}
+tick();
+
+const bw = document.getElementById('bWaddle');
+bw.onclick = ()=>{ state.waddle = !state.waddle; bw.classList.toggle('on', state.waddle); };
+document.getElementById('bFlap').onclick = ()=>{ state.flap = 1.2; };
+document.getElementById('bSpin').onclick = ()=>{ if(state.spin<=0) state.spin = (Math.PI*2)/9 + 0.05; };
+document.getElementById('bBlink').onclick = ()=>{ state.blink = 0.16; };
+
+addEventListener('resize', ()=>{
+  camera.aspect = stage.clientWidth/stage.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(stage.clientWidth, stage.clientHeight);
+});
+</script>
+</body>
+</html>
