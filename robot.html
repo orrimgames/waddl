@@ -19,11 +19,11 @@
   <h2 style="font-size:48px;margin-top:12px">Meet Pip.</h2>
   <p class="lede">Pip is a palm-sized duckling robot. It waddles on two webbed feet, flaps tiny wings when it's happy, and looks at you through two glowing eyes on a dark glass face. One part pet, one part desk buddy, zero parts intimidating.</p>
   <div class="renders">
-    <figure><img src="assets/renders/pip_front.png" alt="Pip front view"><figcaption>front</figcaption></figure>
-    <figure><img src="assets/renders/pip_threequarter.png" alt="Pip three-quarter view"><figcaption>three-quarter</figcaption></figure>
-    <figure><img src="assets/renders/pip_side.png" alt="Pip side view"><figcaption>side</figcaption></figure>
-    <figure><img src="assets/renders/pip_back.png" alt="Pip back view"><figcaption>back</figcaption></figure>
-    <figure><img src="assets/renders/pip_top.png" alt="Pip top view"><figcaption>top</figcaption></figure>
+    <figure><img src="assets/pip_front.png" alt="Pip front view"><figcaption>front</figcaption></figure>
+    <figure><img src="assets/pip_threequarter.png" alt="Pip three-quarter view"><figcaption>three-quarter</figcaption></figure>
+    <figure><img src="assets/pip_side.png" alt="Pip side view"><figcaption>side</figcaption></figure>
+    <figure><img src="assets/pip_back.png" alt="Pip back view"><figcaption>back</figcaption></figure>
+    <figure><img src="assets/pip_top.png" alt="Pip top view"><figcaption>top</figcaption></figure>
   </div>
 </section>
 
@@ -34,6 +34,7 @@
     <div class="card"><h3>The face is the product</h3><p>A dark glass panel with two glowing eyes, driven by a cheap 0.96" OLED. Blinking, looking around, going wide when you pick Pip up. Eilik proved people bond with the face; everything else is supporting cast.</p></div>
     <div class="card"><h3>Waddle, don't walk</h3><p>Walking robots need lots of servos. Waddling needs two: rock side to side, lift a foot, fall forward adorably. Duck anatomy is a cost-saving feature.</p></div>
     <div class="card"><h3>Wings for emotion</h3><p>Two more servos in the wings. A happy flap, a shy droop, an angry flutter. Four servos total, and Pip can act.</p></div>
+    <div class="card"><h3>No cloud, ever</h3><p>Pip listens, thinks, and speaks entirely on-device. No account, no subscription, no server to shut down. When the company's gone, Pip still works. That's not a limitation - that's the brand.</p></div>
     <div class="card"><h3>Egg-simple shell</h3><p>The body is basically an egg with feet. One main print, small add-ons, no exotic geometry. Any entry-level 3D printer can make a Pip.</p></div>
   </div>
 </section>
@@ -44,13 +45,13 @@
   <table>
     <tr><th>Item</th><th>Pip v0.1</th></tr>
     <tr><td><b>Height</b></td><td>~19 cm (concept scale, tune before print)</td></tr>
-    <tr><td><b>Brain</b></td><td>ESP32 dev board (Wi-Fi + Bluetooth built in)</td></tr>
+    <tr><td><b>Brain</b></td><td>ESP32 dev board. Tier B adds a Pi Zero 2 W for real on-device conversation.</td></tr>
     <tr><td><b>Muscles</b></td><td>4x SG90 9g micro servos: 2 feet, 2 wings</td></tr>
     <tr><td><b>Face</b></td><td>0.96" OLED, 128x64, two animated eyes</td></tr>
-    <tr><td><b>Voice</b></td><td>Piezo buzzer - peeps, chirps, tiny quacks</td></tr>
+    <tr><td><b>Voice</b></td><td>Piezo buzzer at Tier 0/A; real local speech (Piper TTS) at Tier B</td></tr>
     <tr><td><b>Power</b></td><td>3.7V LiPo, USB-C charging module</td></tr>
     <tr><td><b>Shell</b></td><td>PLA, ~150g of filament, cream + orange</td></tr>
-    <tr><td><b>Build cost</b></td><td>~$40 (<a href="bom.html">full breakdown</a>)</td></tr>
+    <tr><td><b>Build cost</b></td><td>~$45 Tier 0/A, ~$82 conversational Tier B (<a href="bom.html">full breakdown</a>)</td></tr>
   </table>
   </div>
 </section>
