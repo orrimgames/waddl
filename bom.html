@@ -42,7 +42,7 @@
   <h2>Build steps</h2>
   <p class="lede">From box of parts to first waddle. Estimated a weekend.</p>
   <ol class="steps">
-    <li><b>Print the shell.</b> pip_body_shell.stl plus feet, wings, beak, tail as separate color parts. 0.2mm layers, no supports for the egg body. About 10-12 hours of print time.</li>
+    <li><b>Print the shell.</b> Render cad/pip_v02.scad in OpenSCAD (free) and export shell_front, shell_back, board_tray, face_bezel STLs. 0.2mm layers, no supports. Feet, wings, beak, tail print as separate color parts. About 8-10 hours total at the v0.2 ~14cm scale.</li>
     <li><b>Seat the servos.</b> Feet servos go in the lower body, horns down into each foot. Wing servos in the mid-body, horns out the sides. SG90s come with screws in the bag.</li>
     <li><b>Wire the brain.</b> Servo signal wires to ESP32 GPIO (18/19 feet, 21/22 wings), OLED to I2C (SDA 23, SCL 25), buzzer to GPIO 26, LiPo through the TP4056 and switch to the 5V rail.</li>
     <li><b>Flash the firmware.</b> Arduino IDE, ESP32Servo library. First sketch: center all servos, then the waddle loop - rock, lift left foot, rock, lift right foot.</li>
@@ -72,7 +72,7 @@
   <div class="grid c2">
     <div class="card"><h3>Balance</h3><p>Two-foot waddlers live or die by center of mass. The sim rocks Pip 8 degrees; the real gait gets tuned on the desk. Worst case: wider feet, lower battery.</p></div>
     <div class="card"><h3>Servo jitter on battery</h3><p>Four SG90s pulling at once can brown out a weak rail. Fix is a capacitor on the 5V line and staggering servo moves in firmware.</p></div>
-    <div class="card"><h3>Shell fit</h3><p>Concept model has no mounts yet. v0.2 CAD adds servo pockets, a board tray, and screw bosses before the first print.</p></div>
+    <div class="card"><h3>Shell fit</h3><p>v0.2 CAD now includes servo pockets, board tray, battery bay, and screw bosses. First print still needs a fit check - SG90 pockets carry 0.4mm clearance.</p></div>
     <div class="card"><h3>Scope</h3><p>Camera, mic, app, AI voice - all deliberately NOT in v0. Pip earns features one prototype at a time.</p></div>
   </div>
 </section>
