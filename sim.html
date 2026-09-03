@@ -109,15 +109,20 @@ function tick(){
   controls.update();
 
   if(state.waddle){
-    state.phase += dt*7;
-    const p = state.phase;
-    rig.rotation.z = Math.sin(p)*0.14;
-    rig.position.y = Math.abs(Math.cos(p))*0.7;
-    rig.position.x = Math.sin(t*0.6)*4*0;  // stays on the pad for now
-    if(parts.foot_l) parts.foot_l.position.y = Math.max(0, Math.sin(p))*1.6;
-    if(parts.foot_r) parts.foot_r.position.y = Math.max(0,-Math.sin(p))*1.6;
-    if(parts.wing_l) parts.wing_l.rotation.z = 0.15+Math.sin(p)*0.1;
-    if(parts.wing_r) parts.wing_r.rotation.z = -0.15-Math.sin(p)*0.1;
+    // firmware v0.2 gait: keyframes [roll, wing], cosine-eased, 420ms steps
+    const GAIT = [[1,-1],[0,0],[-1,1],[0,0]];
+    const STEP = 0.42;
+    state.phase += dt/STEP;
+    const i = Math.floor(state.phase) % 4, prev = (i+3) % 4;
+    const e = (1 - Math.cos(Math.min(state.phase % 1, 1) * Math.PI)) / 2;  // cosine ease, same as firmware
+    const roll = GAIT[prev][0] + (GAIT[i][0]-GAIT[prev][0])*e;
+    const wing = GAIT[prev][1] + (GAIT[i][1]-GAIT[prev][1])*e;
+    rig.rotation.z = roll*0.14;
+    rig.position.y = Math.abs(roll)*0.7;
+    if(parts.foot_l) parts.foot_l.position.y = Math.max(0, roll)*1.6;
+    if(parts.foot_r) parts.foot_r.position.y = Math.max(0,-roll)*1.6;
+    if(parts.wing_l) parts.wing_l.rotation.z = 0.15+wing*0.1;
+    if(parts.wing_r) parts.wing_r.rotation.z = -0.15-wing*0.1;
   } else {
     rig.rotation.z *= 0.9;
     rig.position.y = Math.sin(t*2)*0.12 + 0.12;   // breathing bob
