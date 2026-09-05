@@ -44,13 +44,13 @@
 
 <section class="wrap">
   <h2>The face, live</h2>
-  <p class="lede">This is the actual eye logic from firmware/pip_gait_v01.ino, running on this page. Pip idles, looks around, and blinks on its own - or pick a mood.</p>
+  <p class="lede">This is the actual eye logic from firmware/pip_gait_v03.ino, running on this page. Pip idles, looks around, and blinks on its own - or pick a mood.</p>
   <div class="card" style="text-align:center">
     <canvas id="face" width="440" height="180" style="width:100%;max-width:440px;border-radius:14px;background:#14181f"></canvas>
     <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
       <button class="btn ghost" style="margin:0;padding:9px 18px" onclick="setMood('idle')">idle</button>
       <button class="btn ghost" style="margin:0;padding:9px 18px" onclick="setMood('happy')">happy</button>
-      <button class="btn ghost" style="margin:0;padding:9px 18px" onclick="setMood('wide')">wide</button>
+      <button class="btn ghost" style="margin:0;padding:9px 18px" onclick="setMood('curious')">curious</button>
       <button class="btn ghost" style="margin:0;padding:9px 18px" onclick="setMood('sleepy')">sleepy</button>
     </div>
   </div>
@@ -58,20 +58,20 @@
 <script>
 (function(){
   const cv = document.getElementById('face'), cx = cv.getContext('2d');
-  let mood = 'idle', blink = 0, nextBlink = performance.now()+2200, t0 = performance.now();
+  let mood = 'idle', blink = 0, nextBlink = performance.now()+2000+Math.random()*2200, t0 = performance.now();
   window.setMood = m => { mood = m; };
   function rr(x,y,w,h,r){ cx.beginPath(); cx.roundRect(x,y,w,h,r); cx.fill(); }
   function frame(now){
     const t = (now-t0)/1000;
-    if(now > nextBlink){ blink = 0.14; nextBlink = now + 2000 + Math.random()*3500; }
+    if(now > nextBlink){ blink = 0.12; nextBlink = now + 2000 + Math.random()*2200; }  /* v0.3: 120ms blink, 2-4.2s apart */
     if(blink > 0) blink -= 1/60;
     const lookX = Math.sin(t/1.4)*10;
     cx.clearRect(0,0,440,180);
     cx.fillStyle = '#14181f'; cx.fillRect(0,0,440,180);
     cx.fillStyle = '#8ff0ff';
     const closed = blink > 0;
-    const h = closed ? 6 : (mood==='wide' ? 62 : (mood==='sleepy' ? 22 : 46));
-    const w = mood==='wide' ? 46 : 38;
+    const h = closed ? 6 : (mood==='sleepy' ? 22 : 46);
+    const w = 38;
     const y = 90 - h/2;
     if(mood === 'happy' && !closed){
       [[150,110],[290,110]].forEach(([ex,ey])=>{
@@ -80,6 +80,13 @@
     } else {
       rr(150-w/2+lookX, y, w, h, 14);
       rr(290-w/2+lookX, y, w, h, 14);
+      if(mood === 'curious' && !closed){   /* v0.3: pupil offset */
+        cx.fillStyle = '#14181f';
+        [[150,1],[290,1]].forEach(([ex])=>{
+          cx.beginPath(); cx.arc(ex+lookX+12, 82, 9, 0, Math.PI*2); cx.fill();
+        });
+        cx.fillStyle = '#8ff0ff';
+      }
     }
     requestAnimationFrame(frame);
   }
@@ -91,8 +98,8 @@
   <h2>Specs, concept stage</h2>
   <div class="card" style="padding:8px 24px">
   <table>
-    <tr><th>Item</th><th>Pip v0.1</th></tr>
-    <tr><td><b>Height</b></td><td>~19 cm (concept scale, tune before print)</td></tr>
+    <tr><th>Item</th><th>Pip v0.3</th></tr>
+    <tr><td><b>Height</b></td><td>~14 cm at print scale (cad/pip_v03.scad)</td></tr>
     <tr><td><b>Brain</b></td><td>ESP32 dev board. Tier B adds a Pi Zero 2 W for real on-device conversation.</td></tr>
     <tr><td><b>Muscles</b></td><td>4x SG90 9g micro servos: 2 feet, 2 wings</td></tr>
     <tr><td><b>Face</b></td><td>0.96" OLED, 128x64, two animated eyes</td></tr>
@@ -114,7 +121,7 @@
   </div>
   <p style="margin-top:24px"><a class="btn" href="sim.html">See Pip move in the sim</a></p>
   <div class="grid c3" style="margin-top:18px">
-    <div class="card"><h3>pip_gait_v01.ino</h3><p>Tier 0 firmware: waddle gait, eye animations, peeps and quacks, head-pat reaction. No cloud, no radio.</p><p><a href="firmware/pip_gait_v01.ino">Download</a></p></div>
+    <div class="card"><h3>pip_gait_v03.ino</h3><p>Tier 0 firmware: eased waddle gait, 4 eye moods, blinking, peeps and quacks, head-pat reaction, idle nap. No cloud, no radio.</p><p><a href="firmware/pip_gait_v03.ino">Download</a></p></div>
   </div>
 </section>
 
