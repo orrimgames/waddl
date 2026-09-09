@@ -16,6 +16,11 @@
   #title h1{font-size:26px;letter-spacing:-.5px}
   #title p{color:var(--muted);font-size:13px}
   #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px}
+  #sayhud{position:absolute;left:24px;bottom:84px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  #sayhud span{color:var(--muted);font-size:12px;letter-spacing:.4px}
+  #sayhud button{background:transparent;color:var(--muted);border:1px dashed var(--line);border-radius:999px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer}
+  #sayhud button:hover{border-color:var(--accent);color:var(--accent)}
+  #caption{position:absolute;left:50%;top:18%;transform:translateX(-50%);color:var(--accent);font-size:30px;font-weight:800;opacity:0;transition:opacity .25s;pointer-events:none}
 </style>
 </head>
 <body>
@@ -36,6 +41,15 @@
     <button id="bSpin">spin</button>
     <button id="bBlink">blink</button>
   </div>
+  <div id="sayhud">
+    <span>say to pip:</span>
+    <button data-cmd="dance">"dance"</button>
+    <button data-cmd="sing">"sing"</button>
+    <button data-cmd="sleep">"sleep"</button>
+    <button data-cmd="wake">"wake up"</button>
+    <button data-cmd="stop">"stop"</button>
+  </div>
+  <div id="caption"></div>
 </div>
 
 <script src="assets/b64.js"></script>
@@ -83,7 +97,9 @@ pad.rotation.x = -Math.PI/2; pad.position.y = 0.01; pad.receiveShadow = true; sc
 
 let rig = new THREE.Group(); scene.add(rig);
 let parts = {};
-let state = { waddle:false, flap:0, spin:0, blink:0, nextBlink: 2.5, phase: 0 };
+let state = { waddle:false, flap:0, spin:0, blink:0, nextBlink: 2.5, phase: 0, sleep:false, dance:0, sing:0 };
+const caption = document.getElementById('caption');
+function say(t){ caption.textContent = t; caption.style.opacity = 1; setTimeout(()=>caption.style.opacity = 0, 1600); }
 
 new GLTFLoader().parse(glbBytes(), '', (g)=>{
   const model = g.scene;
@@ -108,10 +124,17 @@ function tick(){
   const t = clock.elapsedTime;
   controls.update();
 
-  if(state.waddle){
-    // firmware v0.2 gait: keyframes [roll, wing], cosine-eased, 420ms steps
+  if(state.sleep){
+    // firmware main v0.1 CMD_SLEEP: motion parks, lids drop, breathing slows
+    rig.rotation.z *= 0.9;
+    rig.position.y = Math.sin(t*0.9)*0.06 + 0.06;
+    if(parts.eye_l) parts.eye_l.scale.y = 0.35;
+    if(parts.eye_r) parts.eye_r.scale.y = 0.35;
+  } else if(state.waddle){
+    // firmware gait: keyframes [roll, wing], cosine-eased, 420ms steps (210ms when dancing)
     const GAIT = [[1,-1],[0,0],[-1,1],[0,0]];
-    const STEP = 0.42;
+    const STEP = state.dance > 0 ? 0.21 : 0.42;
+    if(state.dance > 0) state.dance -= dt;
     state.phase += dt/STEP;
     const i = Math.floor(state.phase) % 4, prev = (i+3) % 4;
     const e = (1 - Math.cos(Math.min(state.phase % 1, 1) * Math.PI)) / 2;  // cosine ease, same as firmware
@@ -144,6 +167,12 @@ function tick(){
     if(state.spin <= 0) rig.rotation.y = rig.rotation.y % (Math.PI*2);
   }
 
+  if(state.sing > 0){
+    state.sing -= dt;
+    if(parts.wing_l) parts.wing_l.rotation.z = 0.3+Math.sin(t*14)*0.5;
+    if(parts.wing_r) parts.wing_r.rotation.z = -0.3-Math.sin(t*14)*0.5;
+  }
+
   state.nextBlink -= dt;
   if(state.nextBlink <= 0){ state.blink = 0.16; state.nextBlink = 2 + Math.random()*3.5; }
   if(state.blink > 0){
@@ -151,7 +180,7 @@ function tick(){
     const k = Math.max(0.06, Math.abs(state.blink/0.16*2-1));
     if(parts.eye_l) parts.eye_l.scale.y = k;
     if(parts.eye_r) parts.eye_r.scale.y = k;
-  } else {
+  } else if(!state.sleep) {
     if(parts.eye_l) parts.eye_l.scale.y = 1;
     if(parts.eye_r) parts.eye_r.scale.y = 1;
   }
@@ -165,6 +194,31 @@ bw.onclick = ()=>{ state.waddle = !state.waddle; bw.classList.toggle('on', state
 document.getElementById('bFlap').onclick = ()=>{ state.flap = 1.2; };
 document.getElementById('bSpin').onclick = ()=>{ if(state.spin<=0) state.spin = (Math.PI*2)/9 + 0.05; };
 document.getElementById('bBlink').onclick = ()=>{ state.blink = 0.16; };
+
+// "say to pip" row: mirrors firmware pip_main_v01.ino on_command()
+function wake(){
+  state.sleep = false; state.blink = 0.16;
+  say('pip wakes up');
+}
+document.querySelectorAll('#sayhud button').forEach(b=>{
+  b.onclick = ()=>{
+    const cmd = b.dataset.cmd;
+    if(state.sleep && cmd !== 'wake'){ say('...pip is asleep'); return; }
+    if(cmd === 'dance'){
+      state.waddle = true; state.dance = 2.5; bw.classList.add('on'); say('dance!');
+      setTimeout(()=>{ state.waddle = false; bw.classList.remove('on'); }, 2600);
+    } else if(cmd === 'sing'){
+      state.sing = 2.2; say('\u266a peep peep peep \u266a');
+    } else if(cmd === 'sleep'){
+      state.sleep = true; state.waddle = false; bw.classList.remove('on'); say('good night');
+    } else if(cmd === 'wake'){
+      wake();
+    } else if(cmd === 'stop'){
+      state.waddle = false; state.dance = 0; state.sing = 0; state.flap = 0;
+      bw.classList.remove('on'); say('stop');
+    }
+  };
+});
 
 addEventListener('resize', ()=>{
   camera.aspect = stage.clientWidth/stage.clientHeight;
