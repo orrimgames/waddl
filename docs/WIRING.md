@@ -18,7 +18,7 @@ USB-C into TP4056 charges the LiPo; Pip can run while charging.
   This is the brown-out fix - do not skip it.
 - All grounds common: ESP32 GND, servo GND, TP4056 OUT-, OLED GND, buzzer -.
 
-## Signal map (matches firmware/pip_gait_v02.ino)
+## Signal map (matches firmware/pip_main_v01.ino)
 
 | Part | Pin | ESP32 GPIO |
 | --- | --- | --- |
