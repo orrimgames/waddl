@@ -44,19 +44,37 @@ one day. Source: `cad/pip_v03.scad` - set `PART`, F6, export STL.
 4. Mount the wing servos, horns out the sides; press the wings on.
 5. Screw the ESP32 tray in, low in the shell. Battery bay below it -
    keep the mass low, it is what makes the waddle stable.
-6. Wire per `firmware/pip_gait_v02.ino` pin defines (25/26 feet, 32/33
-   wings, 27 buzzer, GPIO4 touch, OLED on I2C 21/22).
+6. Wire per `docs/WIRING.md` (25/26 feet, 32/33 wings, 27 buzzer, GPIO4
+   touch, OLED on I2C 21/22; Tier A adds the INMP441 on 14/15/13).
 7. Slide the OLED into the face window from inside, bezel over the front.
 8. Beak: upper half screws/glue to the beak seat, lower half flaps on the
    filament hinge pin.
-9. Flash firmware (Arduino IDE, ESP32 board package, SSD1306 + ESP32Servo
-   libs), close the shell with the 4 seam screws.
+9. Flash `firmware/pip_main_v01.ino` (Arduino IDE, ESP32 board package,
+   Adafruit SSD1306 + ESP32Servo libs), close the shell with the 4 seam
+   screws.
 
 ## First power-up
 
 Pip peeps, opens its eyes, and starts waddling in place until you pick it
 up. Touch the head (GPIO4 pad) for a happy chirp. Five minutes of stillness
 and it naps; touch wakes it.
+
+## Bench test (before closing the shell)
+
+With the board still reachable, open Serial Monitor at 115200 and type the
+voice commands by hand - this exercises every behavior the mic will trigger
+later, no audio hardware needed:
+
+| Type | Pip should |
+| --- | --- |
+| `dance` | waddle at double tempo, happy eyes, ~2.5 s |
+| `spin` | turn in place |
+| `sing` | four-note peep riff |
+| `sleep` | lids down, motion parks |
+| `wake up` | back to curious |
+| `stop` | all motion off |
+
+If a row fails, fix it now while the shell is open. Then close up.
 
 ## Fit troubleshooting
 
