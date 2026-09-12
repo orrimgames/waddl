@@ -1,8 +1,8 @@
-# Printing and assembling Pip (v0.3)
+# Printing and assembling Pip (v0.5)
 
 Everything here prints on an entry-level FDM printer (Ender-3 class or
 smaller) without supports. Total filament ~150 g, total print time roughly
-one day. Source: `cad/pip_v03.scad` - set `PART`, F6, export STL.
+one day. Source: `cad/pip_v05.scad` - set `PART`, F6, export STL.
 
 ## Print settings (all parts)
 
@@ -18,6 +18,7 @@ one day. Source: `cad/pip_v03.scad` - set `PART`, F6, export STL.
 ## Parts
 
 | PART name | Qty | Color | Orientation | Notes |
+| `fit_test` | 1 | any | flat | 15-min coupon: validates the v0.5 servo pocket before the big prints |
 | --- | --- | --- | --- | --- |
 | `shell_front` | 1 | cream | seam face down | contains face window + beak seat |
 | `shell_back` | 1 | cream | seam face down | |
@@ -35,6 +36,9 @@ one day. Source: `cad/pip_v03.scad` - set `PART`, F6, export STL.
 
 ## Assembly order
 
+0. Print `fit_test` first. A real SG90 should slide in snug and its tab
+   ears should seat. Too tight: scale pockets +1 % in the slicer. Too
+   loose: a wrap of tape on the servo body is fine.
 1. Test-fit the shell halves. The seam faces should sit flush; a light pass
    with a file on the seam edge is normal.
 2. Press the four servo horns into the feet and wings (spline press fit,
