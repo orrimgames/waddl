@@ -153,20 +153,27 @@ module servo_pocket() {
 // that validates tab clearance and press fit before committing a day of
 // filament to shell halves.
 module fit_test() {
+    // pocket must open at the coupon's top face, so it pokes 0.5mm proud;
+    // coupon height swallows the rest (body + cable notch)
     difference() {
-        cube([44, 26, 20], center = true);
-        servo_pocket();
+        cube([44, 26, 30], center = true);
+        translate([0, 0, 3.5]) servo_pocket();
     }
 }
 
 // ---- assembly view ----
 module assembly() {
+  // model is authored Y-up (feet at y=2, head at y=58); rotate to Z-up for
+  // the on-screen view. Exported parts are unaffected - each PART renders
+  // in its own print orientation.
+  rotate([90, 0, 0]) {
     color("Khaki")  shell_half(true);
     color("Khaki")  shell_half(false);
-    color("Orange") translate([0, body_z + 18, body_r + 2]) rotate([90, 0, 0]) beak();
+    color("Orange") translate([0, body_z + 18, body_r + 2]) beak();  // forward-facing; reads blocky here - the pretty model is assets/pip.glb on the site
     color("Orange") for (s = [-1, 1]) translate([s*hip_x, 2, 0]) foot(s);
-    color("Gold")   for (s = [-1, 1]) translate([s*(body_r*0.75), body_z + 4, 0]) rotate([0, s*90, 0]) wing(s);
+    color("Gold")   for (s = [-1, 1]) translate([s*(body_r - 7), body_z + 4, 0]) rotate([0, s*90, 0]) wing(s);  // roots seat into the shell wall
     color("DimGray") translate([0, body_z - 12, 0]) board_tray();
+  }
 }
 
 if      (PART == "shell_front") shell_half(true);
