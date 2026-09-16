@@ -141,6 +141,10 @@ function tick(){
     const roll = GAIT[prev][0] + (GAIT[i][0]-GAIT[prev][0])*e;
     const wing = GAIT[prev][1] + (GAIT[i][1]-GAIT[prev][1])*e;
     rig.rotation.z = roll*0.14;
+    // gait polish: the body counter-yaws against the roll and the head bobs
+    // once per step - this is most of what makes a waddle read as a waddle
+    rig.rotation.y = -roll*0.10;
+    rig.rotation.x = Math.sin(state.phase * Math.PI * 2) * 0.04;
     rig.position.y = Math.abs(roll)*0.7;
     if(parts.foot_l) parts.foot_l.position.y = Math.max(0, roll)*1.6;
     if(parts.foot_r) parts.foot_r.position.y = Math.max(0,-roll)*1.6;
@@ -148,6 +152,8 @@ function tick(){
     if(parts.wing_r) parts.wing_r.rotation.z = -0.15-wing*0.1;
   } else {
     rig.rotation.z *= 0.9;
+    rig.rotation.y *= 0.95;
+    rig.rotation.x *= 0.9;
     rig.position.y = Math.sin(t*2)*0.12 + 0.12;   // breathing bob
     if(parts.foot_l) parts.foot_l.position.y *= 0.85;
     if(parts.foot_r) parts.foot_r.position.y *= 0.85;
