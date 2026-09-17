@@ -17,7 +17,7 @@
 </div></nav>
 
 <section class="wrap" style="padding-top:64px">
-  <span class="tag">Concept v0.1</span><span class="tag">Duckling companion</span>
+  <span class="tag">Concept v0.5</span><span class="tag">Duckling companion</span>
   <h2 style="font-size:48px;margin-top:12px">Meet Pip.</h2>
   <p class="lede">Pip is a palm-sized duckling robot. It waddles on two webbed feet, flaps tiny wings when it's happy, and looks at you through two glowing eyes on a dark glass face. One part pet, one part desk buddy, zero parts intimidating.</p>
   <div class="renders">
@@ -44,7 +44,7 @@
 
 <section class="wrap">
   <h2>The face, live</h2>
-  <p class="lede">This is the actual eye logic from firmware/pip_gait_v03.ino, running on this page. Pip idles, looks around, and blinks on its own - or pick a mood.</p>
+  <p class="lede">This is the eye logic from firmware/pip_main_v01.ino, running on this page. Pip idles, looks around, and blinks on its own - or pick a mood.</p>
   <div class="card" style="text-align:center">
     <canvas id="face" width="440" height="180" style="width:100%;max-width:440px;border-radius:14px;background:#14181f"></canvas>
     <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
@@ -98,12 +98,13 @@
   <h2>Specs, concept stage</h2>
   <div class="card" style="padding:8px 24px">
   <table>
-    <tr><th>Item</th><th>Pip v0.3</th></tr>
-    <tr><td><b>Height</b></td><td>~14 cm at print scale (cad/pip_v03.scad)</td></tr>
+    <tr><th>Item</th><th>Pip v0.5</th></tr>
+    <tr><td><b>Height</b></td><td>~14 cm at print scale (cad/pip_v05.scad)</td></tr>
     <tr><td><b>Brain</b></td><td>ESP32 dev board. Tier B adds a Pi Zero 2 W for real on-device conversation.</td></tr>
     <tr><td><b>Muscles</b></td><td>4x SG90 9g micro servos: 2 feet, 2 wings</td></tr>
     <tr><td><b>Face</b></td><td>0.96" OLED, 128x64, two animated eyes</td></tr>
     <tr><td><b>Voice</b></td><td>Piezo buzzer at Tier 0/A; real local speech (Piper TTS) at Tier B</td></tr>
+    <tr><td><b>Ears (Tier A)</b></td><td>INMP441 mic + on-device keyword spotting (microWakeWord). "Hey Pip" plus commands like dance, spin, sleep - nothing leaves the robot. <a href="https://github.com/orrimgames/waddl/blob/main/docs/VOICE.md">design</a></td></tr>
     <tr><td><b>Power</b></td><td>3.7V LiPo, USB-C charging module</td></tr>
     <tr><td><b>Shell</b></td><td>PLA, ~150g of filament, cream + orange</td></tr>
     <tr><td><b>Build cost</b></td><td>~$45 Tier 0/A, ~$82 conversational Tier B (<a href="bom.html">full breakdown</a>)</td></tr>
@@ -115,13 +116,14 @@
   <h2>CAD files</h2>
   <p class="lede">The concept model, in the open from day one.</p>
   <div class="grid c3">
-    <div class="card"><h3>pip.scad</h3><p>Parametric OpenSCAD source. Every dimension is a variable; change the beak, re-render.</p><p><a href="cad/pip.scad">Download</a></p></div>
+    <div class="card"><h3>pip_v05.scad</h3><p>The full printable model: shell halves with real SG90 servo pockets (tab relief, screw pilots, cable exits), board tray, OLED face bezel, hinged beak, rocker feet, wings, mic shield - 12 parts, no supports, ~150g of PLA. Every part compiles clean to STL.</p><p><a href="https://github.com/orrimgames/waddl/blob/main/cad/pip_v05.scad">View source</a></p></div>
+    <div class="card"><h3>fit_test coupon</h3><p>A 15-minute print that validates the servo pocket fit before committing a day of filament to the shell. Print first, swear less.</p><p><a href="https://github.com/orrimgames/waddl/blob/main/docs/PRINTING.md">Printing guide</a></p></div>
     <div class="card"><h3>pip.glb</h3><p>The 3D model that powers the <a href="sim.html">web sim</a>. Built by cad/build_model.py.</p><p>Loaded by the sim from the repo (base64). Regenerate with cad/build_model.py.</p></div>
-    <div class="card"><h3>pip_body_shell.stl</h3><p>First slice at a printable shell. Mounts for servos and board come in v0.2.</p><p>Printable shell lands in v0.2 once servo mounts exist.</p></div>
   </div>
   <p style="margin-top:24px"><a class="btn" href="sim.html">See Pip move in the sim</a></p>
   <div class="grid c3" style="margin-top:18px">
-    <div class="card"><h3>pip_gait_v03.ino</h3><p>Tier 0 firmware: eased waddle gait, 4 eye moods, blinking, peeps and quacks, head-pat reaction, idle nap. No cloud, no radio.</p><p><a href="firmware/pip_gait_v03.ino">Download</a></p></div>
+    <div class="card"><h3>pip_main_v01.ino</h3><p>The whole robot in one ESP32 sketch: eased waddle gait, 4 eye moods, blinking, peeps, head-pat reaction, idle nap - plus the Tier A keyword-ears plumbing (I2S mic, audio task on its own core, 12 commands wired to behaviors). No cloud, no radio.</p><p><a href="https://github.com/orrimgames/waddl/blob/main/firmware/pip_main_v01.ino">View source</a></p></div>
+    <div class="card"><h3>Try the commands</h3><p>The sim runs the same command logic as the firmware: tell Pip to dance, sing, sleep. Same behaviors, same moods.</p><p><a href="sim.html">Open the sim</a></p></div>
   </div>
 </section>
 
