@@ -335,6 +335,7 @@ function driveStep(dt,vT,wT){
   const fStall=T_STALL/WHEEL_R;
   // speed + yaw P control
   let fSum=6.0*m*(vT-vB.x);                                     // P on forward speed
+  if(state==='avoid'&&vT<0)fSum=Math.max(fSum,20.0*m*(vT-vB.x)); // recovery reverse: full authority to pitch the nose back off whatever chocked it - traction clamp is the physical limiter
   let fDif=9.0*(wT-wY);                                         // P on yaw rate
   const revCap=(state==='avoid'&&vT<0)?2*fStall:2.0*m; // unstick reverse gets full stall torque, like a real recovery routine
   fSum=Math.max(-revCap,Math.min(2*fMotor+2,fSum)); // reverse/brake capped at 2 m/s2 like real firmware - keeps the caster loaded
@@ -444,7 +445,7 @@ function loop(now){
       for(const b of balls){
         if(!b.live||collected>=HOPPER_MAX)continue;
         const dx=b.body.position.x-mwx, dy=b.body.position.y-mwy, dz=b.body.position.z-mwz;
-        if(dx*dx+dy*dy+dz*dz<0.27*0.27)startIngest(b); // the powered mouth eats any ball touching it at ANY attitude (world-space radius, not a body-fixed zone): wedge balls under the pitched nose get ingested instead of chocking the wheels
+        if(dx*dx+dy*dy+dz*dz<0.34*0.34)startIngest(b); // the powered mouth eats any ball anywhere under the front half of the bot at ANY attitude: a ball the body rides up onto gets ingested instead of becoming a chock
       }
     }
     stepIngests(dtF*warp);
