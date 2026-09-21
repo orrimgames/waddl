@@ -305,7 +305,7 @@ function targets(dt){
 }
 
 // ---------- full dynamics: motors, traction, weight transfer ----------
-const _f=new CANNON.Vec3(), _p=new CANNON.Vec3(), _up=new CANNON.Vec3();
+const _f=new CANNON.Vec3(), _p=new CANNON.Vec3(), _up=new CANNON.Vec3(), _zero=new CANNON.Vec3();
 function driveStep(dt,vT,wT){
   const m=botBody.mass, h=cgHeight(collected);
   // body-frame velocity
@@ -345,7 +345,7 @@ function driveStep(dt,vT,wT){
   }
   // rolling resistance at CG
   _f.set(fwdW.x*fRR,0,fwdW.z*fRR);
-  botBody.applyForce(_f,botBody.position);
+  botBody.applyForce(_f,_zero);
   // support (normal) forces at the three contact points
   for(const [n,x,z] of [[nL,0,TRACK/2],[nR,0,-TRACK/2],[nCaster,CASTER_X,0]]){
     if(n<=0)continue;
@@ -389,7 +389,7 @@ function loop(now){
     for(let s=0;s<warp;s++){
       const {vT,wT}=targets(DT);
       watts=driveStep(DT,vT,wT);
-      world.step(DT/2); world.step(DT/2);
+      world.step(DT);
       simT+=DT; whUsed+=watts*DT/3600;
       // intake check at nose
       const y=yaw(), nx=botBody.position.x+Math.cos(y)*0.26, nz=botBody.position.z-Math.sin(y)*0.26;
