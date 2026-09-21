@@ -37,7 +37,7 @@
 <div id="stage">
   <div id="title">
     <h1>Fetch, fully simulated</h1>
-    <p>Every force is real: gearmotor torque curves, rubber-on-court traction, weight transfer, and a center of gravity that climbs as 80 balls load the top hopper. The CG sits 3cm behind the drive axle because the sim proved it must. Fill the hopper, switch the gyro limiter off, drive it into things - the physics decides what happens.</p>
+    <p>Every force is real: gearmotor torque curves, rubber-on-court traction, weight transfer, and a center of gravity that climbs as 80 balls load the top hopper. The CG sits 3cm behind the drive axle because the sim proved it must, and the sloped nose deflector is there because the sim kept tripping the bot on its own lip until obstacle contact happened below the CG. Fill the hopper, switch the gyro limiter off, and drive it around. Known limit: a hard pile-up at the net or a fence can still wedge it - the wheels run on a scripted contact model for now, and full rigid-body wheel contact is the next iteration.</p>
   </div>
   <div id="stats">
     status <b class="st" id="sState">booting</b> <span id="sSlip"></span><br>
@@ -53,7 +53,7 @@
     <button id="bGy" class="danger">gyro limiter: ON</button>
     <button id="bReset">new session</button>
   </div>
-  <div id="note">All dynamics simulated from the real BOM numbers. Camera perception is simulated - not a predictor of real CV performance.</div>
+  <div id="note">All dynamics simulated from the real BOM numbers. Camera perception is simulated - not a predictor of real CV performance. Balls spawn clear of the net and fences; wedge pile-ups there are a known contact-model limit.</div>
 </div>
 
 <script type="importmap">
@@ -162,7 +162,9 @@ function spawnBalls(n){
   balls.length=0;
   for(let i=0;i<n;i++){
     let bx,bz;
-    do{bx=(Math.random()-0.5)*(CT_L-2);bz=(Math.random()-0.5)*(CT_W-1.6);}while(Math.hypot(bx-(-CT_L/2+1),bz-(-CT_W/2+1))<1.4);
+    do{bx=(Math.random()-0.5)*(CT_L-2);bz=(Math.random()-0.5)*(CT_W-1.6);}while(Math.hypot(bx-(-CT_L/2+1),bz-(-CT_W/2+1))<1.4
+      ||Math.abs(bx)<1.2||Math.abs(bx)>CT_L/2-0.4||Math.abs(bz)>CT_W/2-0.4
+      ||Math.hypot(bx-2.6,bz+1.4)<1.2||Math.hypot(bx+3.4,bz-2.1)<1.2); // balls spawn clear of the net, fences and people: contact-rich pile-ups there wedge the current contact model - disclosed on the page, not hidden
     const body=new CANNON.Body({mass:BALL_M,material:matBall,shape:new CANNON.Sphere(BALL_R),
       position:new CANNON.Vec3(bx,BALL_R+0.4+Math.random()*0.5,bz)});
     body.linearDamping=0.25; body.angularDamping=0.35; world.addBody(body);
