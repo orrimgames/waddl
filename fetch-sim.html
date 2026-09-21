@@ -295,7 +295,7 @@ function control(dt){
   const v=botBody.velocity, sp=Math.hypot(v.x,v.z);
   const heading=new CANNON.Vec3(Math.cos(yaw()),0,-Math.sin(yaw()));
   const cur=Math.hypot(v.x,v.z)*Math.sign(v.x*heading.x+v.z*heading.z||1);
-  const dv=Math.max(-ACCEL*dt,Math.min(ACCEL*dt,desiredSpeed-cur));
+  window.__ds=desiredSpeed;window.__cur=cur;const dv=Math.max(-ACCEL*dt,Math.min(ACCEL*dt,desiredSpeed-cur));
   const nsp=Math.max(-0.4,Math.min(TOP_SPEED,cur+dv));
   botBody.velocity.set(heading.x*nsp,0,heading.z*nsp);
   const yr=Math.max(-TURN_CAP,Math.min(TURN_CAP,desiredYawRate));
@@ -349,7 +349,7 @@ document.getElementById('bReset').onclick=()=>resetSession();
 addEventListener('resize',()=>{camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();renderer.setSize(stage.clientWidth,stage.clientHeight);});
 
 // debug hooks for verification
-window.__fetch={setPos(x,z,hd){botBody.position.x=x;botBody.position.z=z;botBody.quaternion.setFromEuler(0,hd||0,0);},setHopper(n){collected=n;botBody.mass=BASE_M+n*BALL_M;botBody.updateMassProperties();for(let i=0;i<n;i++){const m=new THREE.Mesh(ballGeo,ballMat);const cols=5;m.position.set(-0.13+(i%cols)*0.066,0.02+Math.floor(i/(cols*3))*0.067,-0.085+(Math.floor(i/cols)%3)*0.066);hopBalls.add(m);}},bot:()=>({x:botBody.position.x,z:botBody.position.z,state,collected})};
+window.__fetch={dbg(){return{vx:+botBody.velocity.x.toFixed(4),vz:+botBody.velocity.z.toFixed(4),yaw:+yaw().toFixed(3),sleep:botBody.sleepState,ds:window.__ds||-99,cur:window.__cur||-99};},setPos(x,z,hd){botBody.position.x=x;botBody.position.z=z;botBody.quaternion.setFromEuler(0,hd||0,0);},setHopper(n){collected=n;botBody.mass=BASE_M+n*BALL_M;botBody.updateMassProperties();for(let i=0;i<n;i++){const m=new THREE.Mesh(ballGeo,ballMat);const cols=5;m.position.set(-0.13+(i%cols)*0.066,0.02+Math.floor(i/(cols*3))*0.067,-0.085+(Math.floor(i/cols)%3)*0.066);hopBalls.add(m);}},bot:()=>({x:botBody.position.x,z:botBody.position.z,state,collected})};
 
 resetSession();
 loop(performance.now());
