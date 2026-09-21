@@ -231,7 +231,7 @@ bot.add(hopBalls);
 // ---------- state ----------
 let running=true, warp=1, follow=false, gyroOn=true;
 let collected=0, whUsed=0, simT=0, state='sweep', slipNow=false;
-let row=0, dirSign=1, avoidT=0, avoidDir=1, ingestAnims=[]; let lastVT=0,lastVBx=0,stallT=0; let stallN=0;
+let row=0, dirSign=1, avoidT=0, avoidDir=1, ingestAnims=[]; let lastVT=0,lastVBx=0,stallT=0; let stallN=0; let lastTgt=null,tgtSince=0;
 const ROWS=6;
 
 function resetSession(){
@@ -244,7 +244,7 @@ function resetSession(){
 function yaw(){const e=new THREE.Euler().setFromQuaternion(bot.quaternion,'YXZ');return e.y;}
 function nearestVisibleBall(){
   let best=null,bd=1e9;const y=yaw();
-  for(const b of balls){if(!b.live)continue;
+  for(const b of balls){if(!b.live)continue; if(b.cool&&simT<b.cool)continue; // unreachable-ball cooldown: skip balls that recently wasted 20s
     const dx=b.body.position.x-botBody.position.x, dz=b.body.position.z-botBody.position.z;
     const d=Math.hypot(dx,dz); if(d>CONE_RANGE||d<0.1)continue;
     let a=Math.atan2(-dz,dx)-y; while(a>Math.PI)a-=2*Math.PI; while(a<-Math.PI)a+=2*Math.PI;
@@ -299,7 +299,10 @@ function targets(dt){
   } else {
     const tgt=nearestVisibleBall();
     let goalA;
-    if(tgt){state='seek';const dx=tgt.body.position.x-botBody.position.x,dz=tgt.body.position.z-botBody.position.z;goalA=Math.atan2(-dz,dx);}
+    if(tgt){state='seek';
+      if(tgt!==lastTgt){lastTgt=tgt;tgtSince=simT;}
+      if(simT-tgtSince>20){tgt.cool=simT+30;lastTgt=null;} // 20s with no collect = unreachable (across the net, under a bench) - move on, retry later
+      const dx=tgt.body.position.x-botBody.position.x,dz=tgt.body.position.z-botBody.position.z;goalA=Math.atan2(-dz,dx);}
     else{
       state='sweep';
       const margin=0.9, rowH=(CT_W-2*margin)/ROWS;
