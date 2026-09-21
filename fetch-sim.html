@@ -181,6 +181,8 @@ function rebuildShapes(n){
   if(!botBody.shapes.length){
     const h=cgHeight(0);
     botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.21,0.10,0.17)),new CANNON.Vec3(0,0.145-h,0)); // chassis+battery slab, 4.5cm belly clearance: lip strikes at 10.6 deg pitch, not 4.8
+    const dQ=new CANNON.Quaternion(); dQ.setFromAxisAngle(new CANNON.Vec3(0,0,1),-0.714);
+    botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.040,0.006,0.17)),new CANNON.Vec3(0.23,-0.046,0),dQ); // nose deflector: obstacle contact lands BELOW the CG so the bot gets pushed back, not levered over; leading edge 4cm at x=0.264 strikes ground at 8.6 deg
     botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.19,0.10,0.15)),new CANNON.Vec3(0,LOAD_H-h,0)); // hopper block
   }
   botBody.mass=totalMass(n); botBody.updateMassProperties();
@@ -197,6 +199,8 @@ const mouth=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.12,0.20),new THREE.MeshS
 mouth.position.set(0.215,0.12,0); bot.add(mouth);
 const roller=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,0.19,12),new THREE.MeshStandardMaterial({color:0xf2a83d}));
 roller.rotation.x=Math.PI/2; roller.position.set(0.22,0.09,0); bot.add(roller);
+const defl=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.012,0.34),new THREE.MeshStandardMaterial({color:0x22304e}));
+defl.position.set(0.23-CG_BACK,-0.046+0.117,0); defl.rotation.z=-0.714; defl.castShadow=true; bot.add(defl); // visual match for the physics nose deflector
 const hopWall=new THREE.MeshStandardMaterial({color:0x5ae1ff,transparent:true,opacity:0.28});
 const hopper=new THREE.Mesh(new THREE.BoxGeometry(0.38,0.20,0.30),hopWall);
 hopper.position.y=0.40; bot.add(hopper);
@@ -289,7 +293,7 @@ function targets(dt){
   if(state!=='avoid'&&(dC<0.85||dL<0.45||dR<0.45)){state='avoid';avoidT=0;avoidDir=(dL>dR)?-1:1;}
   if(state==='avoid'){
     avoidT+=dt;
-    if(avoidT<0.55){vT=REV_SPEED;wT=0;}
+    if(avoidT<1.2){vT=REV_SPEED;wT=0;} // 1.2s reverse: long enough to actually unhook the nose from an obstacle
     else{vT=0.3;wT=avoidDir*cap;}
     if(avoidT>1.6&&dC>1.0)state='sweep';
   } else {
@@ -345,7 +349,7 @@ function driveStep(dt,vT,wT){
   let nR=nDrive/2-m*aLat*h/TRACK+m*9.82*h*tz/TRACK;
   nL=Math.max(0,Math.min(m*9.82,nL)); nR=Math.max(0,Math.min(m*9.82,nR));
   nL*=ss; nR*=ss; nCaster*=ss;
-  const sR=0.35+0.65*ss; // reverse authority floor: real firmware always lets you back out of trouble even while tilted
+  const sR=0.7+0.3*ss; // reverse authority floor: real firmware always lets you back out of trouble even while tilted
   if(fL>0)fL*=ss;else fL*=sR; if(fR>0)fR*=ss;else fR*=sR; // forward drive fades with tilt; reverse keeps a floor
   if(ss<=0){
     // leaning or fallen: the vertical support model is off, but the wheels may still be on the ground -
