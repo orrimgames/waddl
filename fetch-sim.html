@@ -347,7 +347,15 @@ function driveStep(dt,vT,wT){
   nL*=ss; nR*=ss; nCaster*=ss;
   const sR=0.35+0.65*ss; // reverse authority floor: real firmware always lets you back out of trouble even while tilted
   if(fL>0)fL*=ss;else fL*=sR; if(fR>0)fR*=ss;else fR*=sR; // forward drive fades with tilt; reverse keeps a floor
-  if(ss<=0){window.__dbg2={tipped:true,v:+botBody.velocity.length().toFixed(2)};return IDLE_W;} // fallen: contacts own the body
+  if(ss<=0){
+    // leaning or fallen: the vertical support model is off, but the wheels may still be on the ground -
+    // allow a gentle clamped reverse so the unstick routine can back the bot off whatever it leans on
+    const nW=m*9.82*0.25, fwdW2=q.vmult(new CANNON.Vec3(1,0,0));
+    for(const [f,z] of [[Math.max(-MU_K*nW,Math.min(0,fL)),TRACK/2],[Math.max(-MU_K*nW,Math.min(0,fR)),-TRACK/2]]){
+      _p.copy(q.vmult(new CANNON.Vec3(CG_BACK,-h,z))); _f.set(fwdW2.x*f,0,fwdW2.z*f); botBody.applyForce(_f,_p);
+    }
+    window.__dbg2={tipped:true,v:+botBody.velocity.length().toFixed(2)};return IDLE_W;
+  }
   // traction limits, slip detection
   const tL=MU_S*nL, tR=MU_S*nR;
   slipNow=false;
