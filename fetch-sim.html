@@ -336,11 +336,8 @@ function driveStep(dt,vT,wT){
   const fRR=-C_RR*m*9.82*Math.sign(vB.x||0);
   // apply longitudinal forces at the two drive-wheel contact patches
   const fwdW=q.vmult(new CANNON.Vec3(1,0,0));
-  const y0=botBody.position.y-h;
   for(const [f,z] of [[fL,TRACK/2],[fR,-TRACK/2]]){
-    _p.set(botBody.position.x,y0,botBody.position.z);
-    const off=q.vmult(new CANNON.Vec3(0,0,z));
-    _p.x+=off.x;_p.z+=off.z;
+    _p.copy(q.vmult(new CANNON.Vec3(0,-h,z))); // relative to COM, world orientation
     _f.set(fwdW.x*f,0,fwdW.z*f);
     botBody.applyForce(_f,_p);
   }
@@ -350,8 +347,7 @@ function driveStep(dt,vT,wT){
   // support (normal) forces at the three contact points
   for(const [n,x,z] of [[nL,0,TRACK/2],[nR,0,-TRACK/2],[nCaster,CASTER_X,0]]){
     if(n<=0)continue;
-    const off=q.vmult(new CANNON.Vec3(x,0,z));
-    _p.set(botBody.position.x+off.x,y0,botBody.position.z+off.z);
+    _p.copy(q.vmult(new CANNON.Vec3(x,-h,z)));
     _up.set(0,n,0);
     botBody.applyForce(_up,_p);
   }
@@ -359,19 +355,19 @@ function driveStep(dt,vT,wT){
   const latDirW=q.vmult(new CANNON.Vec3(0,0,1));
   for(const [n,x,z,fLon] of [[nL,0,TRACK/2,fL],[nR,0,-TRACK/2,fR],[nCaster,CASTER_X,0,0]]){
     if(n<=0)continue;
-    const off=q.vmult(new CANNON.Vec3(x,0,z));
-    const px=botBody.position.x+off.x, pz=botBody.position.z+off.z;
-    // point velocity
-    const w=botBody.angularVelocity, rx=px-botBody.position.x, rz=pz-botBody.position.z, ry=y0-botBody.position.y;
-    const vpx=botBody.velocity.x+w.y*rz-w.z*ry, vpz=botBody.velocity.z-w.y*rx;
-    const vLat=vpx*latDirW.x+vpz*latDirW.z;
+    const rel=q.vmult(new CANNON.Vec3(x,-h,z));
+    // point velocity: v + w x rel
+    const w=botBody.angularVelocity;
+    const vpx=botBody.velocity.x+w.y*rel.z-w.z*rel.y;
+    const vpy=botBody.velocity.y+w.z*rel.x-w.x*rel.z;
+    const vpz=botBody.velocity.z+w.x*rel.y-w.y*rel.x;
+    const vLat=vpx*latDirW.x+vpy*latDirW.y+vpz*latDirW.z;
     const budget=Math.sqrt(Math.max(0,(MU_S*n)*(MU_S*n)-fLon*fLon));
     let fLat=-3.0*m*vLat; // cornering stiffness
     fLat=Math.max(-budget,Math.min(budget,fLat));
     if(Math.abs(fLat)>=budget*0.98&&budget>1)slipNow=true;
-    _p.set(px,y0,pz);
     _f.set(latDirW.x*fLat,0,latDirW.z*fLat);
-    botBody.applyForce(_f,_p);
+    botBody.applyForce(_f,rel);
   }
   // electrical power from motor currents (honest energy)
   const perW=Math.max(0,(Math.abs(fL)+Math.abs(fR))/2)*WHEEL_R; // avg torque N*m
