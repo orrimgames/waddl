@@ -233,7 +233,7 @@ bot.add(hopBalls);
 // ---------- state ----------
 let running=true, warp=1, follow=false, gyroOn=true;
 let collected=0, whUsed=0, simT=0, state='sweep', slipNow=false;
-let row=0, dirSign=1, avoidT=0, avoidDir=1, ingestAnims=[]; let lastVT=0,lastVBx=0,stallT=0; let stallN=0; let lastTgt=null,tgtSince=0;
+let row=0, dirSign=1, avoidT=0, avoidDir=1, ingestAnims=[]; let lastVT=0,lastVBx=0,stallT=0; let stallN=0; let lastTgt=null,tgtSince=0; let lastGBx=0;
 const ROWS=6;
 
 function resetSession(){
@@ -292,6 +292,7 @@ function targets(dt){
   // stall detection: real firmware sees motor current spike with no motion (bump switch of last resort) and backs off
   if(Math.abs(lastVT)>0.12&&Math.abs(lastVBx)<0.5*Math.abs(lastVT)){stallT+=dt;}else{stallT=0;stallN=0;} // ratio test: a slow grind at 0.1 m/s against an obstacle still counts as stalled
   if(stallT>0.6){stallT=0;stallN++;if(state!=='avoid'){state='avoid';avoidT=0;stallN=1;}else{avoidT=(stallN%2)?0:0.56;avoidDir*=-1;}} // alternate: re-reverse, then turn the other way
+  if(lastGBx>0.35&&lastVT>0){if(state!=='avoid')state='avoid';avoidT=0;stallT=0;} // IMU grind detect: nose-down past 20 deg while commanding forward = wedging - back out now, do not creep deeper
   if(state!=='avoid'&&(dC<0.85||dL<0.45||dR<0.45)){state='avoid';avoidT=0;avoidDir=(dL>dR)?-1:1;}
   if(state==='avoid'){
     avoidT+=dt;
@@ -335,13 +336,14 @@ function driveStep(dt,vT,wT){
   // speed + yaw P control
   let fSum=6.0*m*(vT-vB.x);                                     // P on forward speed
   let fDif=9.0*(wT-wY);                                         // P on yaw rate
-  fSum=Math.max(-2.0*m,Math.min(2*fMotor+2,fSum)); // reverse/brake capped at 2 m/s2 like real firmware - keeps the caster loaded
+  const revCap=(state==='avoid'&&vT<0)?2*fStall:2.0*m; // unstick reverse gets full stall torque, like a real recovery routine
+  fSum=Math.max(-revCap,Math.min(2*fMotor+2,fSum)); // reverse/brake capped at 2 m/s2 like real firmware - keeps the caster loaded
   // wheel split BEFORE normals: pitch balance must use the ACTUAL applied force
   let fL=Math.max(-fStall,Math.min(fMotor,fSum/2+fDif));
   let fR=Math.max(-fStall,Math.min(fMotor,fSum/2-fDif));
   // commanded accel for weight transfer
   const aX=(fL+fR)/m;
-  const gB=iq.vmult(_g);                        // gravity direction in body frame
+  const gB=iq.vmult(_g);                        // gravity direction in body frame lastGBx=gB.x;
   const u=Math.max(0.05,-gB.y);                 // uprightness = cos(tilt)
   const ss=Math.max(0,Math.min(1,(u-0.5)/0.35)); // tilt safety cut: drive fades past 31 deg, all support gone past 60 - real firmware cuts drive on tilt
   const tz=Math.max(-1,Math.min(1,-gB.z/u)), tx=Math.max(-1,Math.min(1,-gB.x/u)); // ground-plane tilt tangent, clamped: beyond 45 deg contacts own the body
