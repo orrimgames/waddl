@@ -176,10 +176,13 @@ function totalMass(n){return BASE_M+SHELL_M+n*BALL_M;}
 function cgHeight(n){return (BASE_M*BASE_H+(SHELL_M+n*BALL_M)*LOAD_H)/totalMass(n);}
 const botBody=new CANNON.Body({mass:totalMass(0),material:matBot,position:new CANNON.Vec3(-CT_L/2+1,cgHeight(0),-CT_W/2+1)});
 function rebuildShapes(n){
-  botBody.shapes.length=0; botBody.shapeOffsets.length=0; botBody.shapeOrientations.length=0;
-  const h=cgHeight(n);
-  botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.21,0.10,0.17)),new CANNON.Vec3(0,0.12-h,0)); // chassis+battery slab
-  botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.19,0.10,0.15)),new CANNON.Vec3(0,LOAD_H-h,0)); // hopper block
+  // collision geometry is built ONCE: the chassis does not move when the hopper fills.
+  // per-collect events update mass only - the CG climb lives in the drive model via cgHeight(collected).
+  if(!botBody.shapes.length){
+    const h=cgHeight(0);
+    botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.21,0.10,0.17)),new CANNON.Vec3(0,0.12-h,0)); // chassis+battery slab
+    botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.19,0.10,0.15)),new CANNON.Vec3(0,LOAD_H-h,0)); // hopper block
+  }
   botBody.mass=totalMass(n); botBody.updateMassProperties();
 }
 rebuildShapes(0);
