@@ -8,7 +8,7 @@
 <style>
 .hero h1{font-size:58px}
 .price-row{display:flex;gap:18px;flex-wrap:wrap;margin-top:26px}
-.pill{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 22px;min-width:150px}
+.pill{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 18px;min-width:126px}
 .pill .n{font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--accent)}
 .pill .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
 .pill.dim .n{color:var(--muted);text-decoration:line-through}
@@ -76,13 +76,15 @@
     <path d="M 104 288 L 118 288" stroke="#f2a83d" stroke-width="2.5" marker-end="url(#arr)"/>
     <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f2a83d"/></marker></defs>
     <!-- camera mast -->
-    <rect x="330" y="120" width="8" height="82" fill="#263252"/>
-    <rect x="318" y="102" width="32" height="20" rx="5" fill="#1c2539" stroke="#5ae1ff" stroke-width="2"/>
-    <circle cx="334" cy="112" r="6" fill="#0e1320" stroke="#5ae1ff" stroke-width="1.5"/>
-    <text x="400" y="116" fill="#5ae1ff" font-size="13" font-weight="700" text-anchor="middle">Pi Zero 2 W + camera</text>
+    <rect x="366" y="122" width="8" height="80" fill="#263252"/>
+    <rect x="354" y="102" width="32" height="20" rx="5" fill="#1c2539" stroke="#5ae1ff" stroke-width="2"/>
+    <circle cx="370" cy="112" r="6" fill="#0e1320" stroke="#5ae1ff" stroke-width="1.5"/>
+    <text x="452" y="96" fill="#5ae1ff" font-size="13" font-weight="700" text-anchor="middle">Pi Zero 2 W + camera</text>
+    <path d="M 388 108 L 424 100" stroke="#5ae1ff" stroke-width="1"/>
     <!-- battery low -->
     <rect x="170" y="300" width="160" height="20" rx="6" fill="#101827" stroke="#f2a83d" stroke-width="1.5"/>
-    <text x="250" y="345" fill="#f2a83d" font-size="13" font-weight="700" text-anchor="middle">12 Ah pack, slung low</text>
+    <text x="436" y="316" fill="#f2a83d" font-size="13" font-weight="700" text-anchor="middle">12 Ah pack, slung low</text>
+    <path d="M 332 312 L 370 312" stroke="#f2a83d" stroke-width="1"/>
     <!-- wheels -->
     <circle cx="180" cy="352" r="26" fill="#161d2e" stroke="#5ae1ff" stroke-width="2"/>
     <circle cx="180" cy="352" r="8" fill="#263252"/>
@@ -233,4 +235,4 @@ loop();
 })();
 </script>
 </body>
-  </html>
+</html>
