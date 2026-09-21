@@ -169,7 +169,7 @@ function spawnBalls(n){
 const botBody=new CANNON.Body({mass:BASE_M,material:matBot,position:new CANNON.Vec3(-CT_L/2+1,0.3,-CT_W/2+1)});
 botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.21,0.10,0.17)),new CANNON.Vec3(0,-0.10,0)); // chassis slab (low = battery)
 botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.19,0.10,0.15)),new CANNON.Vec3(0,0.16,0));  // hopper block
-botBody.fixedRotation=true; botBody.allowSleep=false; botBody.updateMassProperties(); world.addBody(botBody);
+botBody.fixedRotation=true; botBody.allowSleep=false; botBody.type=CANNON.Body.KINEMATIC; botBody.updateMassProperties(); world.addBody(botBody);
 
 const bot=new THREE.Group();
 const chassis=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.20,0.34),new THREE.MeshStandardMaterial({color:0x2b3a5c}));
@@ -295,7 +295,7 @@ function control(dt){
   const v=botBody.velocity, sp=Math.hypot(v.x,v.z);
   const heading=new CANNON.Vec3(Math.cos(yaw()),0,-Math.sin(yaw()));
   const cur=Math.hypot(v.x,v.z)*Math.sign(v.x*heading.x+v.z*heading.z||1);
-  window.__ds=desiredSpeed;window.__cur=cur;const dv=Math.max(-ACCEL*dt,Math.min(ACCEL*dt,desiredSpeed-cur));
+  window.__ds=desiredSpeed;window.__cur=cur;const accelEff=ACCEL*BASE_M/botBody.mass;const dv=Math.max(-accelEff*dt,Math.min(accelEff*dt,desiredSpeed-cur));
   const nsp=Math.max(-0.4,Math.min(TOP_SPEED,cur+dv));
   botBody.velocity.set(heading.x*nsp,0,heading.z*nsp);
   const yr=Math.max(-TURN_CAP,Math.min(TURN_CAP,desiredYawRate));
