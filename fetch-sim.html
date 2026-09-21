@@ -312,6 +312,7 @@ function driveStep(dt,vT,wT){
   const q=botBody.quaternion, iq=q.clone(); iq.conjugate();
   const vB=iq.vmult(botBody.velocity);
   const wY=botBody.angularVelocity.y;
+  const wB=iq.vmult(botBody.angularVelocity);
   // wheel speed -> motor curve limit (per wheel)
   const wWheel=Math.max(0,vB.x)/WHEEL_R;
   const fMotor=Math.max(0,T_STALL*(1-wWheel/W_NL))/WHEEL_R;     // N per wheel at this speed
@@ -320,24 +321,25 @@ function driveStep(dt,vT,wT){
   let fSum=6.0*m*(vT-vB.x);                                     // P on forward speed
   let fDif=9.0*(wT-wY);                                         // P on yaw rate
   fSum=Math.max(-2*fStall,Math.min(2*fMotor+2,fSum));
+  // wheel split BEFORE normals: pitch balance must use the ACTUAL applied force
+  let fL=Math.max(-fStall,Math.min(fMotor,fSum/2+fDif));
+  let fR=Math.max(-fStall,Math.min(fMotor,fSum/2-fDif));
   // commanded accel for weight transfer
-  const aX=fSum/m;
+  const aX=(fL+fR)/m;
   const gB=iq.vmult(_g);                        // gravity direction in body frame
   const u=Math.max(0.05,-gB.y);                 // uprightness = cos(tilt)
   const tz=-gB.z/u, tx=-gB.x/u;                 // ground-plane tilt (tangent), body frame
   const aLat=Math.max(-20,Math.min(20,vB.x*wY));
   // normal forces (quasi-static rigid-body equilibrium + accel AND gravity-tilt transfer)
-  let nCaster=m*aX*h/(-CASTER_X)+m*9.82*h*tx/(-CASTER_X);
+  let nCaster=m*aX*h/(-CASTER_X)+m*9.82*h*tx/(-CASTER_X)+8.0*wB.z/(-CASTER_X);
   nCaster=Math.max(0,Math.min(m*9.82,nCaster));
   let nDrive=m*9.82-nCaster;
-  let nL=nDrive/2+m*aLat*h/TRACK-m*9.82*h*tz/TRACK;
-  let nR=nDrive/2-m*aLat*h/TRACK+m*9.82*h*tz/TRACK;
+  let nL=nDrive/2+m*aLat*h/TRACK-m*9.82*h*tz/TRACK+8.0*wB.x/TRACK;
+  let nR=nDrive/2-m*aLat*h/TRACK+m*9.82*h*tz/TRACK-8.0*wB.x/TRACK;
   nL=Math.max(0,nL); nR=Math.max(0,nR);
   if(-gB.y<0.25){window.__dbg2={tipped:true,v:+botBody.velocity.length().toFixed(2)};return IDLE_W;} // fallen: contacts own the body
   // traction limits, slip detection
   const tL=MU_S*nL, tR=MU_S*nR;
-  let fL=Math.max(-fStall,Math.min(fMotor,fSum/2+fDif));
-  let fR=Math.max(-fStall,Math.min(fMotor,fSum/2-fDif));
   slipNow=false;
   if(Math.abs(fL)>tL){fL=Math.sign(fL)*MU_K*nL;slipNow=true;}
   if(Math.abs(fR)>tR){fR=Math.sign(fR)*MU_K*nR;slipNow=true;}
