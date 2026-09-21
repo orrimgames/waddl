@@ -88,7 +88,7 @@ camera.position.set(7,6,10);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.target.set(0,0.3,0); controls.enableDamping=true; controls.maxPolarAngle=1.45;
 
-scene.add(new THREE.HemisphereLight(0xcfe6ff,0x1a2030,0.95));
+scene.add(new THREE.HemisphereLight(0xcfe6ff,0x1a2030,1.2));
 const sun=new THREE.DirectionalLight(0xfff2dd,1.5);
 sun.position.set(8,14,6); sun.castShadow=renderer.shadowMap.enabled;
 sun.shadow.mapSize.set(1024,1024);
@@ -172,7 +172,7 @@ botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.19,0.10,0.15)),new CANNON.Vec3
 botBody.fixedRotation=true; botBody.updateMassProperties(); world.addBody(botBody);
 
 const bot=new THREE.Group();
-const chassis=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.20,0.34),new THREE.MeshStandardMaterial({color:0x1c2539}));
+const chassis=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.20,0.34),new THREE.MeshStandardMaterial({color:0x2b3a5c}));
 chassis.position.y=-0.10; chassis.castShadow=true; bot.add(chassis);
 const mouth=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.12,0.20),new THREE.MeshStandardMaterial({color:0x0e1320}));
 mouth.position.set(0.215,-0.10,0); bot.add(mouth);
@@ -277,7 +277,7 @@ function control(dt){
     else{
       state='sweep';
       const margin=0.9, rowH=(CT_W-2*margin)/ROWS;
-      const rz=-CT_W/2+margin+row*rowH, rx=dirSign>0?CT_L/2-margin:-CT_L/2+margin;
+      const rz=-CT_W/2+margin+row*rowH, rx=dirSign>0?-0.7:-CT_L/2+margin;
       goalA=Math.atan2(-(rz-botBody.position.z),rx-botBody.position.x);
       if(Math.hypot(rx-botBody.position.x,rz-botBody.position.z)<0.5){row=(row+1)%ROWS;dirSign*=-1;}
     }
@@ -289,7 +289,7 @@ function control(dt){
   const y=yaw(), nx=botBody.position.x+Math.cos(y)*0.26, nz=botBody.position.z-Math.sin(y)*0.26;
   for(const b of balls){
     if(!b.live)continue;
-    if(Math.hypot(b.body.position.x-nx,b.body.position.z-nz)<0.11&&collected<HOPPER_MAX){startIngest(b);}
+    if(Math.hypot(b.body.position.x-nx,b.body.position.z-nz)<0.14&&collected<HOPPER_MAX){startIngest(b);}
   }
   // drive: acceleration-limited velocity, gyro-capped turn
   const v=botBody.velocity, sp=Math.hypot(v.x,v.z);
@@ -347,7 +347,7 @@ document.getElementById('bReset').onclick=()=>resetSession();
 addEventListener('resize',()=>{camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();renderer.setSize(stage.clientWidth,stage.clientHeight);});
 
 // debug hooks for verification
-window.__fetch={setHopper(n){collected=n;botBody.mass=BASE_M+n*BALL_M;botBody.updateMassProperties();for(let i=0;i<n;i++){const m=new THREE.Mesh(ballGeo,ballMat);const cols=5;m.position.set(-0.13+(i%cols)*0.066,0.02+Math.floor(i/(cols*3))*0.067,-0.085+(Math.floor(i/cols)%3)*0.066);hopBalls.add(m);}},bot:()=>({x:botBody.position.x,z:botBody.position.z,state,collected})};
+window.__fetch={setPos(x,z,hd){botBody.position.x=x;botBody.position.z=z;botBody.quaternion.setFromEuler(0,hd||0,0);},setHopper(n){collected=n;botBody.mass=BASE_M+n*BALL_M;botBody.updateMassProperties();for(let i=0;i<n;i++){const m=new THREE.Mesh(ballGeo,ballMat);const cols=5;m.position.set(-0.13+(i%cols)*0.066,0.02+Math.floor(i/(cols*3))*0.067,-0.085+(Math.floor(i/cols)%3)*0.066);hopBalls.add(m);}},bot:()=>({x:botBody.position.x,z:botBody.position.z,state,collected})};
 
 resetSession();
 loop(performance.now());
