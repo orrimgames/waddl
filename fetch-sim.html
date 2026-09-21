@@ -417,7 +417,7 @@ function loop(now){
       for(const b of balls){
         if(!b.live||collected>=HOPPER_MAX)continue;
         const rel=_iq.vmult(new CANNON.Vec3(b.body.position.x-botBody.position.x,b.body.position.y-botBody.position.y,b.body.position.z-botBody.position.z));
-        if(rel.x>0.16&&rel.x<0.44&&Math.abs(rel.z)<0.17&&rel.y<0.25)startIngest(b);
+        if(rel.x>0.14&&rel.x<0.40&&Math.abs(rel.z)<0.24&&rel.y<0.25)startIngest(b); // mouth spans the full body width - nothing to jam against
       }
     }
     stepIngests(dtF*warp);
