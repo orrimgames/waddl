@@ -161,8 +161,10 @@ function spawnBalls(n){
   for(const b of balls){scene.remove(b.mesh); world.removeBody(b.body);}
   balls.length=0;
   for(let i=0;i<n;i++){
+    let bx,bz;
+    do{bx=(Math.random()-0.5)*(CT_L-2);bz=(Math.random()-0.5)*(CT_W-1.6);}while(Math.hypot(bx-(-CT_L/2+1),bz-(-CT_W/2+1))<1.4);
     const body=new CANNON.Body({mass:BALL_M,material:matBall,shape:new CANNON.Sphere(BALL_R),
-      position:new CANNON.Vec3((Math.random()-0.5)*(CT_L-2),BALL_R+0.4+Math.random()*0.5,(Math.random()-0.5)*(CT_W-1.6))});
+      position:new CANNON.Vec3(bx,BALL_R+0.4+Math.random()*0.5,bz)});
     body.linearDamping=0.25; body.angularDamping=0.35; world.addBody(body);
     const mesh=new THREE.Mesh(ballGeo,ballMat); mesh.castShadow=true; scene.add(mesh);
     balls.push({body,mesh,live:true});
