@@ -432,11 +432,12 @@ function loop(now){
       simT+=DT; whUsed+=watts*DT/3600;
       // intake check at nose
       // intake: full-width mouth zone at the nose - balls reaching the front get scooped, not jammed
-      const _iq=botBody.quaternion.clone(); _iq.conjugate(_iq);
+      const _mw=botBody.quaternion.vmult(new CANNON.Vec3(0.24,-0.03,0)); // mouth point, body frame
+      const mwx=botBody.position.x+_mw.x, mwy=botBody.position.y+_mw.y, mwz=botBody.position.z+_mw.z;
       for(const b of balls){
         if(!b.live||collected>=HOPPER_MAX)continue;
-        const rel=_iq.vmult(new CANNON.Vec3(b.body.position.x-botBody.position.x,b.body.position.y-botBody.position.y,b.body.position.z-botBody.position.z));
-        if(rel.x>0.02&&rel.x<0.42&&Math.abs(rel.z)<0.26&&rel.y<0.30)startIngest(b); // mouth reaches under the nose lip: a ball half-wedged at the lip gets pulled in, not ridden over // mouth spans the full body width - nothing to jam against
+        const dx=b.body.position.x-mwx, dy=b.body.position.y-mwy, dz=b.body.position.z-mwz;
+        if(dx*dx+dy*dy+dz*dz<0.27*0.27)startIngest(b); // the powered mouth eats any ball touching it at ANY attitude (world-space radius, not a body-fixed zone): wedge balls under the pitched nose get ingested instead of chocking the wheels
       }
     }
     stepIngests(dtF*warp);
