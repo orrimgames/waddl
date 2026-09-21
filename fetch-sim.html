@@ -332,11 +332,11 @@ function driveStep(dt,vT,wT){
   const tz=Math.max(-1,Math.min(1,-gB.z/u)), tx=Math.max(-1,Math.min(1,-gB.x/u)); // ground-plane tilt tangent, clamped: beyond 45 deg contacts own the body
   const aLat=Math.max(-5,Math.min(5,vB.x*wY)); // real lateral accel tops out ~2 at 0.6 m/s
   // normal forces (quasi-static rigid-body equilibrium + accel AND gravity-tilt transfer)
-  let nCaster=m*9.82*CG_BACK/(-CASTER_X)+m*aX*h/(-CASTER_X)+m*9.82*h*tx/(-CASTER_X)+8.0*wB.z/(-CASTER_X);
+  let nCaster=m*9.82*CG_BACK/(-CASTER_X)+m*aX*h/(-CASTER_X)+m*9.82*h*tx/(-CASTER_X); // no rate term: body-frame wB.z mixes yaw into pitch and it unloaded the caster mid-cruise (trace-verified)
   nCaster=Math.max(0,Math.min(m*9.82,nCaster));
   let nDrive=m*9.82-nCaster;
-  let nL=nDrive/2+m*aLat*h/TRACK-m*9.82*h*tz/TRACK+8.0*wB.x/TRACK;
-  let nR=nDrive/2-m*aLat*h/TRACK+m*9.82*h*tz/TRACK-8.0*wB.x/TRACK;
+  let nL=nDrive/2+m*aLat*h/TRACK-m*9.82*h*tz/TRACK;
+  let nR=nDrive/2-m*aLat*h/TRACK+m*9.82*h*tz/TRACK;
   nL=Math.max(0,Math.min(m*9.82,nL)); nR=Math.max(0,Math.min(m*9.82,nR));
   nL*=ss; nR*=ss; nCaster*=ss;
   if(ss<1){fL=0;fR=0;}
