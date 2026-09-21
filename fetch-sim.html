@@ -305,7 +305,7 @@ function targets(dt){
 }
 
 // ---------- full dynamics: motors, traction, weight transfer ----------
-const _f=new CANNON.Vec3(), _p=new CANNON.Vec3(), _up=new CANNON.Vec3(), _zero=new CANNON.Vec3();
+const _f=new CANNON.Vec3(), _p=new CANNON.Vec3(), _up=new CANNON.Vec3(), _zero=new CANNON.Vec3(), _g=new CANNON.Vec3(0,-1,0);
 function driveStep(dt,vT,wT){
   const m=botBody.mass, h=cgHeight(collected);
   // body-frame velocity
@@ -321,12 +321,19 @@ function driveStep(dt,vT,wT){
   let fDif=9.0*(wT-wY);                                         // P on yaw rate
   fSum=Math.max(-2*fStall,Math.min(2*fMotor+2,fSum));
   // commanded accel for weight transfer
-  const aX=fSum/m, aLat=vB.x*wY;
-  // normal forces (quasi-static rigid-body equilibrium + transfer)
-  let nCaster=Math.max(0,Math.min(m*9.82,m*aX*h/(-CASTER_X)));
+  const aX=fSum/m;
+  const gB=iq.vmult(_g);                        // gravity direction in body frame
+  const u=Math.max(0.05,-gB.y);                 // uprightness = cos(tilt)
+  const tz=-gB.z/u, tx=-gB.x/u;                 // ground-plane tilt (tangent), body frame
+  const aLat=Math.max(-20,Math.min(20,vB.x*wY));
+  // normal forces (quasi-static rigid-body equilibrium + accel AND gravity-tilt transfer)
+  let nCaster=m*aX*h/(-CASTER_X)-m*9.82*h*tx/(-CASTER_X);
+  nCaster=Math.max(0,Math.min(m*9.82,nCaster));
   let nDrive=m*9.82-nCaster;
-  let nL=nDrive/2+m*aLat*h/TRACK, nR=nDrive/2-m*aLat*h/TRACK;
+  let nL=nDrive/2+m*aLat*h/TRACK+m*9.82*h*tz/TRACK;
+  let nR=nDrive/2-m*aLat*h/TRACK-m*9.82*h*tz/TRACK;
   nL=Math.max(0,nL); nR=Math.max(0,nR);
+  if(-gB.y<0.25){window.__dbg2={tipped:true,v:+botBody.velocity.length().toFixed(2)};return IDLE_W;} // fallen: contacts own the body
   // traction limits, slip detection
   const tL=MU_S*nL, tR=MU_S*nR;
   let fL=Math.max(-fStall,Math.min(fMotor,fSum/2+fDif));
