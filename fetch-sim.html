@@ -296,7 +296,10 @@ function targets(dt){
   if(state!=='avoid'&&(dC<0.85||dL<0.45||dR<0.45)){state='avoid';avoidT=0;avoidDir=(dL>dR)?-1:1;}
   if(state==='avoid'){
     avoidT+=dt;
-    if(avoidT<1.2){vT=REV_SPEED;wT=0;} // 1.2s reverse: long enough to actually unhook the nose from an obstacle
+    let rearBall=false; // the reverse is blind: never back over a ball - it rolls under the belly and chocks the wheels
+    const fx=Math.cos(yaw()),fz=-Math.sin(yaw());
+    for(const b of balls){if(!b.live)continue;const dx=b.body.position.x-botBody.position.x,dz=b.body.position.z-botBody.position.z;if(dx*dx+dz*dz>0.2)continue;const along=dx*fx+dz*fz;if(along<-0.02){rearBall=true;break;}}
+    if(avoidT<1.2&&!rearBall){vT=REV_SPEED;wT=0;} // 1.2s reverse: long enough to actually unhook the nose from an obstacle
     else{vT=0.3;wT=avoidDir*cap;}
     if(avoidT>1.6&&dC>1.0)state='sweep';
   } else {
