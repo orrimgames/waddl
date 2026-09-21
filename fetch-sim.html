@@ -328,6 +328,7 @@ function driveStep(dt,vT,wT){
   const aX=(fL+fR)/m;
   const gB=iq.vmult(_g);                        // gravity direction in body frame
   const u=Math.max(0.05,-gB.y);                 // uprightness = cos(tilt)
+  const ss=Math.max(0,Math.min(1,(u-0.5)/0.35)); // tilt safety cut: drive fades past 31 deg, all support gone past 60 - real firmware cuts drive on tilt
   const tz=Math.max(-1,Math.min(1,-gB.z/u)), tx=Math.max(-1,Math.min(1,-gB.x/u)); // ground-plane tilt tangent, clamped: beyond 45 deg contacts own the body
   const aLat=Math.max(-5,Math.min(5,vB.x*wY)); // real lateral accel tops out ~2 at 0.6 m/s
   // normal forces (quasi-static rigid-body equilibrium + accel AND gravity-tilt transfer)
@@ -337,7 +338,9 @@ function driveStep(dt,vT,wT){
   let nL=nDrive/2+m*aLat*h/TRACK-m*9.82*h*tz/TRACK+8.0*wB.x/TRACK;
   let nR=nDrive/2-m*aLat*h/TRACK+m*9.82*h*tz/TRACK-8.0*wB.x/TRACK;
   nL=Math.max(0,Math.min(m*9.82,nL)); nR=Math.max(0,Math.min(m*9.82,nR));
-  if(-gB.y<0.25){window.__dbg2={tipped:true,v:+botBody.velocity.length().toFixed(2)};return IDLE_W;} // fallen: contacts own the body
+  nL*=ss; nR*=ss; nCaster*=ss;
+  if(ss<1){fL=0;fR=0;}
+  if(ss<=0){window.__dbg2={tipped:true,v:+botBody.velocity.length().toFixed(2)};return IDLE_W;} // fallen: contacts own the body
   // traction limits, slip detection
   const tL=MU_S*nL, tR=MU_S*nR;
   slipNow=false;
@@ -374,7 +377,7 @@ function driveStep(dt,vT,wT){
     const vpz=botBody.velocity.z+w.x*rel.y-w.y*rel.x;
     const vLat=vpx*latDirW.x+vpy*latDirW.y+vpz*latDirW.z;
     const budget=Math.min(Math.sqrt(Math.max(0,(MU_S*n)*(MU_S*n)-fLon*fLon)),m*9.82*u); // grip fades with tilt
-    let fLat=-3.0*m*vLat; // cornering stiffness
+    let fLat=-3.0*m*vLat*ss; // cornering stiffness, cut with tilt safety
     fLat=Math.max(-budget,Math.min(budget,fLat));
     if(Math.abs(fLat)>=budget*0.98&&budget>1)slipNow=true;
     _f.set(latDirW.x*fLat,0,latDirW.z*fLat);
