@@ -328,15 +328,15 @@ function driveStep(dt,vT,wT){
   const aX=(fL+fR)/m;
   const gB=iq.vmult(_g);                        // gravity direction in body frame
   const u=Math.max(0.05,-gB.y);                 // uprightness = cos(tilt)
-  const tz=-gB.z/u, tx=-gB.x/u;                 // ground-plane tilt (tangent), body frame
-  const aLat=Math.max(-20,Math.min(20,vB.x*wY));
+  const tz=Math.max(-1,Math.min(1,-gB.z/u)), tx=Math.max(-1,Math.min(1,-gB.x/u)); // ground-plane tilt tangent, clamped: beyond 45 deg contacts own the body
+  const aLat=Math.max(-5,Math.min(5,vB.x*wY)); // real lateral accel tops out ~2 at 0.6 m/s
   // normal forces (quasi-static rigid-body equilibrium + accel AND gravity-tilt transfer)
   let nCaster=m*9.82*CG_BACK/(-CASTER_X)+m*aX*h/(-CASTER_X)+m*9.82*h*tx/(-CASTER_X)+8.0*wB.z/(-CASTER_X);
   nCaster=Math.max(0,Math.min(m*9.82,nCaster));
   let nDrive=m*9.82-nCaster;
   let nL=nDrive/2+m*aLat*h/TRACK-m*9.82*h*tz/TRACK+8.0*wB.x/TRACK;
   let nR=nDrive/2-m*aLat*h/TRACK+m*9.82*h*tz/TRACK-8.0*wB.x/TRACK;
-  nL=Math.max(0,nL); nR=Math.max(0,nR);
+  nL=Math.max(0,Math.min(m*9.82,nL)); nR=Math.max(0,Math.min(m*9.82,nR));
   if(-gB.y<0.25){window.__dbg2={tipped:true,v:+botBody.velocity.length().toFixed(2)};return IDLE_W;} // fallen: contacts own the body
   // traction limits, slip detection
   const tL=MU_S*nL, tR=MU_S*nR;
@@ -373,7 +373,7 @@ function driveStep(dt,vT,wT){
     const vpy=botBody.velocity.y+w.z*rel.x-w.x*rel.z;
     const vpz=botBody.velocity.z+w.x*rel.y-w.y*rel.x;
     const vLat=vpx*latDirW.x+vpy*latDirW.y+vpz*latDirW.z;
-    const budget=Math.sqrt(Math.max(0,(MU_S*n)*(MU_S*n)-fLon*fLon));
+    const budget=Math.min(Math.sqrt(Math.max(0,(MU_S*n)*(MU_S*n)-fLon*fLon)),m*9.82*u); // grip fades with tilt
     let fLat=-3.0*m*vLat; // cornering stiffness
     fLat=Math.max(-budget,Math.min(budget,fLat));
     if(Math.abs(fLat)>=budget*0.98&&budget>1)slipNow=true;
