@@ -15,10 +15,12 @@
   #hud button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer}
   #hud button:hover{border-color:var(--accent);color:var(--accent)}
   #hud button.on{background:var(--accent);color:#1a1206;border-color:var(--accent)}
+  #hud button.danger.on{background:#e05252;color:#fff;border-color:#e05252}
   #stats{position:absolute;right:20px;top:16px;background:rgba(14,19,32,.82);border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-size:12.5px;color:var(--muted);z-index:5;font-variant-numeric:tabular-nums;line-height:1.7}
   #stats b{color:var(--text)}
   #stats .st{color:var(--accent2)}
-  #note{position:absolute;right:20px;bottom:18px;max-width:300px;color:var(--muted);font-size:11.5px;text-align:right;z-index:5;opacity:.85}
+  #stats .slip{color:#e05252;font-weight:800}
+  #note{position:absolute;right:20px;bottom:18px;max-width:320px;color:var(--muted);font-size:11.5px;text-align:right;z-index:5;opacity:.85}
   @media(max-width:820px){#title p{max-width:60vw}#note{display:none}}
 </style>
 </head>
@@ -34,22 +36,24 @@
 
 <div id="stage">
   <div id="title">
-    <h1>Fetch, physics-honest</h1>
-    <p>Real numbers drive this: chassis + battery 5.0 kg, up to 4.6 kg of balls, 0.6 m/s top speed, gyro-limited turns, 133 Wh pack draining at the true watt draw. Drag to orbit, pinch to zoom.</p>
+    <h1>Fetch, fully simulated</h1>
+    <p>Every force is real: gearmotor torque curves, rubber-on-court traction, weight transfer, and a center of gravity that climbs as 80 balls load the top hopper. Fill it up, switch the gyro limiter off, and you can tip it - that is the point.</p>
   </div>
   <div id="stats">
-    status <b class="st" id="sState">booting</b><br>
+    status <b class="st" id="sState">booting</b> <span id="sSlip"></span><br>
     hopper <b id="sHop">0</b> / 80 &middot; balls out <b id="sOut">40</b><br>
-    battery <b id="sBat">100.0</b>% &middot; <b id="sWh">0.0</b> Wh used<br>
+    battery <b id="sBat">100.0</b>% &middot; draw <b id="sW">4</b> W<br>
+    CG height <b id="sCg">0.107</b> m &middot; gyro <b id="sGy">on</b><br>
     court time <b id="sTime">0:00</b> &middot; speed <b id="sSpd">1x</b>
   </div>
   <div id="hud">
     <button id="bGo">pause</button>
     <button id="bCam">follow cam</button>
     <button id="bWarp">2x time</button>
+    <button id="bGy" class="danger">gyro limiter: ON</button>
     <button id="bReset">new session</button>
   </div>
-  <div id="note">Dynamics modeled from the real BOM numbers. Camera perception is simulated - this is not a predictor of real CV performance.</div>
+  <div id="note">All dynamics simulated from the real BOM numbers. Camera perception is simulated - not a predictor of real CV performance.</div>
 </div>
 
 <script type="importmap">
@@ -64,13 +68,18 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import * as CANNON from 'cannon-es';
 
-// ---------- real spec constants ----------
-const BALL_R=0.0335, BALL_M=0.058, BALL_RESTITUTION=0.72;   // tennis ball
-const BASE_M=5.0, HOPPER_MAX=80;                            // kg dry mass
-const TOP_SPEED=0.6, ACCEL=0.55, TURN_CAP=1.4;              // m/s, m/s^2, rad/s (gyro-limited)
-const PACK_WH=133, IDLE_W=4, DRIVE_W=24, ROLLER_W=6;        // energy model
-const SONAR_RANGE=1.2, CONE_RANGE=4.2, CONE_HALF=0.62;      // m, rad
-// court: doubles proportions, shown as practice-scale 16 x 8 m
+// ---------- real spec constants (BOM) ----------
+const BALL_R=0.0335, BALL_M=0.058, BALL_REST=0.72;
+const BASE_M=5.0, BASE_H=0.10;              // chassis+12Ah pack, low
+const SHELL_M=0.3, LOAD_H=0.40;             // hopper shell + ball load height
+const HOPPER_MAX=80;
+const WHEEL_R=0.07, TRACK=0.38, CASTER_X=-0.17;
+const T_STALL=1.0, W_NL=10.47, V_BUS=12, I_NL=0.15, I_STALL=5.0, GEAR_ETA=0.55; // GB37-class 12V
+const MU_S=0.9, MU_K=0.7, C_RR=0.02;        // rubber on acrylic hard court
+const TURN_CAP=1.4, TURN_CAP_OFF=3.2;
+const TOP_SPEED=0.6, REV_SPEED=-0.35;
+const PACK_WH=133, IDLE_W=4, ROLLER_W=6;
+const SONAR_RANGE=1.2, CONE_RANGE=4.2, CONE_HALF=0.62;
 const CT_L=16, CT_W=8;
 
 // ---------- renderer ----------
@@ -87,7 +96,6 @@ const camera=new THREE.PerspectiveCamera(52,stage.clientWidth/stage.clientHeight
 camera.position.set(7,6,10);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.target.set(0,0.3,0); controls.enableDamping=true; controls.maxPolarAngle=1.45;
-
 scene.add(new THREE.HemisphereLight(0xcfe6ff,0x1a2030,1.2));
 const sun=new THREE.DirectionalLight(0xfff2dd,1.5);
 sun.position.set(8,14,6); sun.castShadow=renderer.shadowMap.enabled;
@@ -95,17 +103,17 @@ sun.shadow.mapSize.set(1024,1024);
 sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=12;sun.shadow.camera.bottom=-12;
 scene.add(sun);
 
-// ---------- physics world ----------
+// ---------- physics ----------
 const world=new CANNON.World({gravity:new CANNON.Vec3(0,-9.82,0)});
 world.broadphase=new CANNON.SAPBroadphase(world);
 const matGround=new CANNON.Material('g'), matBall=new CANNON.Material('b'), matBot=new CANNON.Material('r');
-world.addContactMaterial(new CANNON.ContactMaterial(matGround,matBall,{friction:0.45,restitution:BALL_RESTITUTION}));
-world.addContactMaterial(new CANNON.ContactMaterial(matGround,matBot,{friction:0.04,restitution:0}));
+world.addContactMaterial(new CANNON.ContactMaterial(matGround,matBall,{friction:0.45,restitution:BALL_REST}));
+world.addContactMaterial(new CANNON.ContactMaterial(matGround,matBot,{friction:0.3,restitution:0.05}));
 world.addContactMaterial(new CANNON.ContactMaterial(matBot,matBall,{friction:0.2,restitution:0.35}));
+const groundBody=new CANNON.Body({mass:0,material:matGround,shape:new CANNON.Plane()});
+groundBody.quaternion.setFromEuler(-Math.PI/2,0,0); world.addBody(groundBody);
 
-// ground + court visuals
-world.addBody(new CANNON.Body({mass:0,material:matGround,shape:new CANNON.Plane()}));
-world.bodies[0].quaternion.setFromEuler(-Math.PI/2,0,0);
+// court visuals
 const court=new THREE.Mesh(new THREE.BoxGeometry(CT_L+1.6,0.05,CT_W+1.6),new THREE.MeshStandardMaterial({color:0x2c5f8a}));
 court.position.y=-0.026; court.receiveShadow=true; scene.add(court);
 const inner=new THREE.Mesh(new THREE.PlaneGeometry(CT_L,CT_W),new THREE.MeshStandardMaterial({color:0x3a76ab}));
@@ -114,26 +122,23 @@ function line(w,l,x,z){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,l),new T
 line(CT_L,0.06,0,-CT_W/2);line(CT_L,0.06,0,CT_W/2);line(0.06,CT_W,-CT_L/2,0);line(0.06,CT_W,CT_L/2,0);
 line(CT_L*0.62,0.05,0,-CT_W*0.18);line(CT_L*0.62,0.05,0,CT_W*0.18);
 
-// static obstacles: fence, net, posts, two people
-const obstacles=[]; // meshes for sonar raycast
-function staticBox(w,h,d,x,y,z,mat,color,castShadowV=true){
-  const body=new CANNON.Body({mass:0,material:mat,shape:new CANNON.Box(new CANNON.Vec3(w/2,h/2,d/2)),position:new CANNON.Vec3(x,y,z)});
-  world.addBody(body);
+// static obstacles
+const obstacles=[];
+function staticBox(w,h,d,x,y,z,color){
+  world.addBody(new CANNON.Body({mass:0,material:matBot,shape:new CANNON.Box(new CANNON.Vec3(w/2,h/2,d/2)),position:new CANNON.Vec3(x,y,z)}));
   const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color}));
-  mesh.position.set(x,y,z); mesh.castShadow=castShadowV; scene.add(mesh); obstacles.push(mesh); return mesh;
+  mesh.position.set(x,y,z); mesh.castShadow=true; scene.add(mesh); obstacles.push(mesh); return mesh;
 }
 const fenceC=0x263252;
-staticBox(CT_L+1.6,0.9,0.12,0,0.45,-(CT_W/2+0.8),matBot,fenceC);
-staticBox(CT_L+1.6,0.9,0.12,0,0.45,(CT_W/2+0.8),matBot,fenceC);
-staticBox(0.12,0.9,CT_W+1.7,-(CT_L/2+0.8),0.45,0,matBot,fenceC);
-staticBox(0.12,0.9,CT_W+1.7,(CT_L/2+0.8),0.45,0,matBot,fenceC);
-// net: two posts + translucent mesh band (solid to physics below 0.9m)
-staticBox(0.09,1.07,0.09,0,0.53,-CT_W/2,matBot,0x9aa4bf);
-staticBox(0.09,1.07,0.09,0,0.53,CT_W/2,matBot,0x9aa4bf);
+staticBox(CT_L+1.6,0.9,0.12,0,0.45,-(CT_W/2+0.8),fenceC);
+staticBox(CT_L+1.6,0.9,0.12,0,0.45,(CT_W/2+0.8),fenceC);
+staticBox(0.12,0.9,CT_W+1.7,-(CT_L/2+0.8),0.45,0,fenceC);
+staticBox(0.12,0.9,CT_W+1.7,(CT_L/2+0.8),0.45,0,fenceC);
+staticBox(0.09,1.07,0.09,0,0.53,-CT_W/2,0x9aa4bf);
+staticBox(0.09,1.07,0.09,0,0.53,CT_W/2,0x9aa4bf);
 const netMesh=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.91,CT_W),new THREE.MeshStandardMaterial({color:0xdadfe8,transparent:true,opacity:0.35}));
 netMesh.position.set(0,0.46,0); scene.add(netMesh); obstacles.push(netMesh);
 world.addBody(new CANNON.Body({mass:0,material:matBot,shape:new CANNON.Box(new CANNON.Vec3(0.015,0.455,CT_W/2)),position:new CANNON.Vec3(0,0.46,0)}));
-// people (legs matter): two standing figures
 function person(x,z){
   const g=new THREE.Group();
   const legs=new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.16,0.9,10),new THREE.MeshStandardMaterial({color:0x30415e}));
@@ -143,13 +148,12 @@ function person(x,z){
   const head=new THREE.Mesh(new THREE.SphereGeometry(0.13,12,10),new THREE.MeshStandardMaterial({color:0xd9b08c}));
   head.position.y=1.78; g.add(head);
   g.position.set(x,0,z); g.traverse(o=>{o.castShadow=true;}); scene.add(g);
-  legs.userData.person=true; obstacles.push(legs,torso);
+  obstacles.push(legs,torso);
   world.addBody(new CANNON.Body({mass:0,material:matBot,shape:new CANNON.Box(new CANNON.Vec3(0.17,0.92,0.17)),position:new CANNON.Vec3(x,0.92,z)}));
-  return g;
 }
 person(2.6,-1.4); person(-3.4,2.1);
 
-// ---------- balls ----------
+// balls
 const balls=[];
 const ballGeo=new THREE.SphereGeometry(BALL_R,14,12);
 const ballMat=new THREE.MeshStandardMaterial({color:0xc8d94e});
@@ -165,56 +169,69 @@ function spawnBalls(n){
   }
 }
 
-// ---------- Fetch robot ----------
-const botBody=new CANNON.Body({mass:BASE_M,material:matBot,position:new CANNON.Vec3(-CT_L/2+1,0.3,-CT_W/2+1)});
-botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.21,0.10,0.17)),new CANNON.Vec3(0,-0.10,0)); // chassis slab (low = battery)
-botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.19,0.10,0.15)),new CANNON.Vec3(0,0.16,0));  // hopper block
-botBody.fixedRotation=true; botBody.allowSleep=false; botBody.type=CANNON.Body.KINEMATIC; botBody.updateMassProperties(); world.addBody(botBody);
+// ---------- Fetch rigid body (dynamic, true CG) ----------
+function totalMass(n){return BASE_M+SHELL_M+n*BALL_M;}
+function cgHeight(n){return (BASE_M*BASE_H+(SHELL_M+n*BALL_M)*LOAD_H)/totalMass(n);}
+const botBody=new CANNON.Body({mass:totalMass(0),material:matBot,position:new CANNON.Vec3(-CT_L/2+1,cgHeight(0),-CT_W/2+1)});
+function rebuildShapes(n){
+  botBody.shapes.length=0; botBody.shapeOffsets.length=0; botBody.shapeOrientations.length=0;
+  const h=cgHeight(n);
+  botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.21,0.10,0.17)),new CANNON.Vec3(0,0.12-h,0)); // chassis+battery slab
+  botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.19,0.10,0.15)),new CANNON.Vec3(0,LOAD_H-h,0)); // hopper block
+  botBody.mass=totalMass(n); botBody.updateMassProperties();
+}
+rebuildShapes(0);
+botBody.linearDamping=0.02; botBody.angularDamping=0.45; botBody.allowSleep=false;
+world.addBody(botBody);
 
+// visuals
 const bot=new THREE.Group();
 const chassis=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.20,0.34),new THREE.MeshStandardMaterial({color:0x2b3a5c}));
-chassis.position.y=-0.10; chassis.castShadow=true; bot.add(chassis);
+chassis.position.y=0.12; chassis.castShadow=true; bot.add(chassis);
 const mouth=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.12,0.20),new THREE.MeshStandardMaterial({color:0x0e1320}));
-mouth.position.set(0.215,-0.10,0); bot.add(mouth);
+mouth.position.set(0.215,0.12,0); bot.add(mouth);
 const roller=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,0.19,12),new THREE.MeshStandardMaterial({color:0xf2a83d}));
-roller.rotation.x=Math.PI/2; roller.position.set(0.22,-0.13,0); bot.add(roller);
+roller.rotation.x=Math.PI/2; roller.position.set(0.22,0.09,0); bot.add(roller);
 const hopWall=new THREE.MeshStandardMaterial({color:0x5ae1ff,transparent:true,opacity:0.28});
 const hopper=new THREE.Mesh(new THREE.BoxGeometry(0.38,0.20,0.30),hopWall);
-hopper.position.y=0.16; bot.add(hopper);
+hopper.position.y=0.40; bot.add(hopper);
 const mast=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,0.22,8),new THREE.MeshStandardMaterial({color:0x9aa4bf}));
-mast.position.set(-0.14,0.35,0); bot.add(mast);
+mast.position.set(-0.14,0.47,0); bot.add(mast);
 const cam=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.04,0.05),new THREE.MeshStandardMaterial({color:0x0e1320}));
-cam.position.set(-0.14,0.47,0); bot.add(cam);
-const wheelG=new THREE.CylinderGeometry(0.075,0.075,0.04,16);
+cam.position.set(-0.14,0.59,0); bot.add(cam);
+const wheelG=new THREE.CylinderGeometry(WHEEL_R,WHEEL_R,0.04,16);
 const wheelM=new THREE.MeshStandardMaterial({color:0x101827});
-for(const z of[-0.19,0.19]){const w=new THREE.Mesh(wheelG,wheelM);w.rotation.x=Math.PI/2;w.position.set(0,-0.16,z);bot.add(w);}
+const wheelL=new THREE.Mesh(wheelG,wheelM), wheelR=new THREE.Mesh(wheelG,wheelM);
+wheelL.rotation.x=Math.PI/2; wheelR.rotation.x=Math.PI/2;
+wheelL.position.set(0,WHEEL_R,TRACK/2); wheelR.position.set(0,WHEEL_R,-TRACK/2);
+bot.add(wheelL,wheelR);
 const caster=new THREE.Mesh(new THREE.SphereGeometry(0.035,10,8),wheelM);
-caster.position.set(-0.17,-0.175,0); bot.add(caster);
-// vision cone
+caster.position.set(CASTER_X,0.035,0); bot.add(caster);
 const coneLen=CONE_RANGE, coneR=Math.tan(CONE_HALF)*CONE_RANGE;
 const cone=new THREE.Mesh(new THREE.ConeGeometry(coneR,coneLen,24,1,true),
   new THREE.MeshBasicMaterial({color:0x5ae1ff,transparent:true,opacity:0.07,side:THREE.DoubleSide,depthWrite:false}));
-cone.rotation.z=Math.PI/2; cone.position.set(-0.14+coneLen/2,0.47,0); cone.rotation.z=-Math.PI/2;
+cone.rotation.z=-Math.PI/2; cone.position.set(-0.14+coneLen/2,0.59,0);
 bot.add(cone);
+// CG marker (small orange dot)
+const cgDot=new THREE.Mesh(new THREE.SphereGeometry(0.02,8,6),new THREE.MeshBasicMaterial({color:0xf2a83d}));
+scene.add(cgDot);
 scene.add(bot);
-// hopper fill visual
-const hopBalls=new THREE.Group(); hopBalls.position.set(0,0.09,0); bot.add(hopper);
+const hopBalls=new THREE.Group(); hopBalls.position.set(0,0.31,0);
+bot.add(hopBalls);
 
 // ---------- state ----------
-let running=true, warp=1, follow=false;
-let collected=0, whUsed=0, simT=0, state='sweep';
-let row=0, dirSign=1, target=null, avoidT=0, avoidDir=1, ingestAnims=[];
+let running=true, warp=1, follow=false, gyroOn=true;
+let collected=0, whUsed=0, simT=0, state='sweep', slipNow=false;
+let row=0, dirSign=1, avoidT=0, avoidDir=1, ingestAnims=[];
 const ROWS=6;
 
 function resetSession(){
-  spawnBalls(40); collected=0; whUsed=0; simT=0; row=0; target=null; state='sweep';
-  botBody.position.set(-CT_L/2+1,0.3,-CT_W/2+1); botBody.velocity.setZero(); botBody.angularVelocity.setZero();
-  botBody.quaternion.setFromEuler(0,0,0); hopBalls.clear();
+  spawnBalls(40); collected=0; whUsed=0; simT=0; row=0; state='sweep'; dirSign=1;
+  botBody.position.set(-CT_L/2+1,cgHeight(0),-CT_W/2+1);
+  botBody.velocity.setZero(); botBody.angularVelocity.setZero();
+  botBody.quaternion.setFromEuler(0,0,0); rebuildShapes(0); hopBalls.clear();
 }
 
-// ---------- helpers ----------
-const fwd=()=>new THREE.Vector3(1,0,0).applyQuaternion(bot.quaternion);
-function angleTo(p){const d=new THREE.Vector3(p.x-botBody.position.x,0,p.z-botBody.position.z);return Math.atan2(-d.z,d.x)-yaw();}
 function yaw(){const e=new THREE.Euler().setFromQuaternion(bot.quaternion,'YXZ');return e.y;}
 function nearestVisibleBall(){
   let best=null,bd=1e9;const y=yaw();
@@ -227,7 +244,7 @@ function nearestVisibleBall(){
   return best;
 }
 const ray=new THREE.Raycaster();
-function sonar(side){ // side: -1,0,1 ; returns dist or Infinity
+function sonar(side){
   const y=yaw()+side*0.5;
   const o=new THREE.Vector3(botBody.position.x,0.22,botBody.position.z);
   ray.set(o,new THREE.Vector3(Math.cos(y),0,-Math.sin(y)).normalize()); ray.far=SONAR_RANGE;
@@ -240,8 +257,6 @@ function addHopperBall(){
   m.position.set(-0.13+(i%cols)*0.066, 0.02+Math.floor(i/(cols*3))*0.067, -0.085+(Math.floor(i/cols)%3)*0.066);
   hopBalls.add(m);
 }
-
-// ---------- ingest animation ----------
 function startIngest(ball){
   ball.live=false; world.removeBody(ball.body);
   ingestAnims.push({mesh:ball.mesh,t:0,from:ball.mesh.position.clone()});
@@ -249,31 +264,30 @@ function startIngest(ball){
 function stepIngests(dt){
   for(const a of ingestAnims){
     a.t+=dt*2;
-    const p0=a.from, p1=bot.localToWorld(new THREE.Vector3(0,0.18,0));
-    const m=a.t<0.5?p0.clone().lerp(bot.localToWorld(new THREE.Vector3(0.22,-0.1,0)),a.t*2)
-                   :bot.localToWorld(new THREE.Vector3(0.22,-0.1,0)).lerp(p1,(a.t-0.5)*2);
+    const p1=bot.localToWorld(new THREE.Vector3(0,0.30,0));
+    const m=a.t<0.5?a.from.clone().lerp(bot.localToWorld(new THREE.Vector3(0.22,0.0,0)),a.t*2)
+                   :bot.localToWorld(new THREE.Vector3(0.22,0.0,0)).lerp(p1,(a.t-0.5)*2);
     a.mesh.position.copy(m);
-    if(a.t>=1){scene.remove(a.mesh);collected++;botBody.mass=BASE_M+collected*BALL_M;botBody.updateMassProperties();addHopperBall();a.done=true;}
+    if(a.t>=1){scene.remove(a.mesh);collected++;rebuildShapes(collected);addHopperBall();a.done=true;}
   }
   ingestAnims=ingestAnims.filter(a=>!a.done);
 }
 
-// ---------- control ----------
-function control(dt){
+// ---------- controller (targets) ----------
+function targets(dt){
   const dC=sonar(0), dL=sonar(-1), dR=sonar(1);
-  let desiredYawRate=0, desiredSpeed=TOP_SPEED;
-  if(state!=='avoid'&&(dC<0.85||dL<0.45||dR<0.45)){
-    state='avoid'; avoidT=0; avoidDir=(dL>dR)?-1:1;
-  }
+  let vT=TOP_SPEED, wT=0;
+  const cap=gyroOn?TURN_CAP:TURN_CAP_OFF;
+  if(state!=='avoid'&&(dC<0.85||dL<0.45||dR<0.45)){state='avoid';avoidT=0;avoidDir=(dL>dR)?-1:1;}
   if(state==='avoid'){
     avoidT+=dt;
-    if(avoidT<0.55){desiredSpeed=-0.35;desiredYawRate=0;}
-    else{desiredSpeed=0.3;desiredYawRate=avoidDir*TURN_CAP;}
-    if(avoidT>1.6&&dC>1.0){state='sweep';}
+    if(avoidT<0.55){vT=REV_SPEED;wT=0;}
+    else{vT=0.3;wT=avoidDir*cap;}
+    if(avoidT>1.6&&dC>1.0)state='sweep';
   } else {
-    target=nearestVisibleBall();
+    const tgt=nearestVisibleBall();
     let goalA;
-    if(target){state='seek';const dx=target.body.position.x-botBody.position.x,dz=target.body.position.z-botBody.position.z;goalA=Math.atan2(-dz,dx);}
+    if(tgt){state='seek';const dx=tgt.body.position.x-botBody.position.x,dz=tgt.body.position.z-botBody.position.z;goalA=Math.atan2(-dz,dx);}
     else{
       state='sweep';
       const margin=0.9, rowH=(CT_W-2*margin)/ROWS;
@@ -282,74 +296,151 @@ function control(dt){
       if(Math.hypot(rx-botBody.position.x,rz-botBody.position.z)<0.5){row=(row+1)%ROWS;dirSign*=-1;}
     }
     let da=goalA-yaw();while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;
-    desiredYawRate=Math.max(-TURN_CAP,Math.min(TURN_CAP,da*2.2));
-    if(Math.abs(da)>1.2)desiredSpeed=0.22;
+    wT=Math.max(-cap,Math.min(cap,da*2.2));
+    if(Math.abs(da)>1.2)vT=0.22;
   }
-  // intake check (nose zone)
-  const y=yaw(), nx=botBody.position.x+Math.cos(y)*0.26, nz=botBody.position.z-Math.sin(y)*0.26;
-  for(const b of balls){
-    if(!b.live)continue;
-    if(Math.hypot(b.body.position.x-nx,b.body.position.z-nz)<0.14&&collected<HOPPER_MAX){startIngest(b);}
-  }
-  // drive: acceleration-limited velocity, gyro-capped turn
-  const v=botBody.velocity, sp=Math.hypot(v.x,v.z);
-  const heading=new CANNON.Vec3(Math.cos(yaw()),0,-Math.sin(yaw()));
-  const cur=Math.hypot(v.x,v.z)*Math.sign(v.x*heading.x+v.z*heading.z||1);
-  window.__ds=desiredSpeed;window.__cur=cur;const accelEff=ACCEL*BASE_M/botBody.mass;const dv=Math.max(-accelEff*dt,Math.min(accelEff*dt,desiredSpeed-cur));
-  const nsp=Math.max(-0.4,Math.min(TOP_SPEED,cur+dv));
-  botBody.velocity.set(heading.x*nsp,0,heading.z*nsp);
-  const yr=Math.max(-TURN_CAP,Math.min(TURN_CAP,desiredYawRate));
-  botBody.quaternion.setFromEuler(0,yaw()+yr*dt,0);
-  botBody.angularVelocity.set(0,0,0);
-  return Math.abs(nsp)>0.05;
+  return {vT,wT};
 }
 
-// ---------- energy ----------
-function energy(dt,driving,ingesting){
-  let w=IDLE_W; if(driving)w=DRIVE_W; if(ingesting)w+=ROLLER_W;
-  whUsed+=w*dt/3600;
+// ---------- full dynamics: motors, traction, weight transfer ----------
+const _f=new CANNON.Vec3(), _p=new CANNON.Vec3(), _up=new CANNON.Vec3();
+function driveStep(dt,vT,wT){
+  const m=botBody.mass, h=cgHeight(collected);
+  // body-frame velocity
+  const q=botBody.quaternion, iq=q.clone(); iq.conjugate();
+  const vB=iq.vmult(botBody.velocity);
+  const wY=botBody.angularVelocity.y;
+  // wheel speed -> motor curve limit (per wheel)
+  const wWheel=Math.max(0,vB.x)/WHEEL_R;
+  const fMotor=Math.max(0,T_STALL*(1-wWheel/W_NL))/WHEEL_R;     // N per wheel at this speed
+  const fStall=T_STALL/WHEEL_R;
+  // speed + yaw P control
+  let fSum=6.0*m*(vT-vB.x);                                     // P on forward speed
+  let fDif=9.0*(wT-wY);                                         // P on yaw rate
+  fSum=Math.max(-2*fStall,Math.min(2*fMotor+2,fSum));
+  // commanded accel for weight transfer
+  const aX=fSum/m, aLat=vB.x*wY;
+  // normal forces (quasi-static rigid-body equilibrium + transfer)
+  let nCaster=Math.max(0,Math.min(m*9.82,m*aX*h/(-CASTER_X)));
+  let nDrive=m*9.82-nCaster;
+  let nL=nDrive/2+m*aLat*h/TRACK, nR=nDrive/2-m*aLat*h/TRACK;
+  nL=Math.max(0,nL); nR=Math.max(0,nR);
+  // traction limits, slip detection
+  const tL=MU_S*nL, tR=MU_S*nR;
+  let fL=Math.max(-fStall,Math.min(fMotor,fSum/2+fDif));
+  let fR=Math.max(-fStall,Math.min(fMotor,fSum/2-fDif));
+  slipNow=false;
+  if(Math.abs(fL)>tL){fL=Math.sign(fL)*MU_K*nL;slipNow=true;}
+  if(Math.abs(fR)>tR){fR=Math.sign(fR)*MU_K*nR;slipNow=true;}
+  // rolling resistance
+  const fRR=-C_RR*m*9.82*Math.sign(vB.x||0);
+  // apply longitudinal forces at the two drive-wheel contact patches
+  const fwdW=q.vmult(new CANNON.Vec3(1,0,0));
+  const y0=botBody.position.y-h;
+  for(const [f,z] of [[fL,TRACK/2],[fR,-TRACK/2]]){
+    _p.set(botBody.position.x,y0,botBody.position.z);
+    const off=q.vmult(new CANNON.Vec3(0,0,z));
+    _p.x+=off.x;_p.z+=off.z;
+    _f.set(fwdW.x*f,0,fwdW.z*f);
+    botBody.applyForce(_f,_p);
+  }
+  // rolling resistance at CG
+  _f.set(fwdW.x*fRR,0,fwdW.z*fRR);
+  botBody.applyForce(_f,botBody.position);
+  // support (normal) forces at the three contact points
+  for(const [n,x,z] of [[nL,0,TRACK/2],[nR,0,-TRACK/2],[nCaster,CASTER_X,0]]){
+    if(n<=0)continue;
+    const off=q.vmult(new CANNON.Vec3(x,0,z));
+    _p.set(botBody.position.x+off.x,y0,botBody.position.z+off.z);
+    _up.set(0,n,0);
+    botBody.applyForce(_up,_p);
+  }
+  // lateral tire friction per contact (traction-circle budget after longitudinal)
+  const latDirW=q.vmult(new CANNON.Vec3(0,0,1));
+  for(const [n,x,z,fLon] of [[nL,0,TRACK/2,fL],[nR,0,-TRACK/2,fR],[nCaster,CASTER_X,0,0]]){
+    if(n<=0)continue;
+    const off=q.vmult(new CANNON.Vec3(x,0,z));
+    const px=botBody.position.x+off.x, pz=botBody.position.z+off.z;
+    // point velocity
+    const w=botBody.angularVelocity, rx=px-botBody.position.x, rz=pz-botBody.position.z, ry=y0-botBody.position.y;
+    const vpx=botBody.velocity.x+w.y*rz-w.z*ry, vpz=botBody.velocity.z-w.y*rx;
+    const vLat=vpx*latDirW.x+vpz*latDirW.z;
+    const budget=Math.sqrt(Math.max(0,(MU_S*n)*(MU_S*n)-fLon*fLon));
+    let fLat=-3.0*m*vLat; // cornering stiffness
+    fLat=Math.max(-budget,Math.min(budget,fLat));
+    if(Math.abs(fLat)>=budget*0.98&&budget>1)slipNow=true;
+    _p.set(px,y0,pz);
+    _f.set(latDirW.x*fLat,0,latDirW.z*fLat);
+    botBody.applyForce(_f,_p);
+  }
+  // electrical power from motor currents (honest energy)
+  const perW=Math.max(0,(Math.abs(fL)+Math.abs(fR))/2)*WHEEL_R; // avg torque N*m
+  const cur=I_NL+(I_STALL-I_NL)*(perW/T_STALL);
+  const mech=V_BUS*cur*2/GEAR_ETA;
+  return IDLE_W+mech+(ingestAnims.length?ROLLER_W:0);
 }
 
 // ---------- main loop ----------
-const timeStep=1/60; let last=performance.now();
+const DT=1/60; let last=performance.now();
 function loop(now){
   requestAnimationFrame(loop);
-  let dt=Math.min(0.05,(now-last)/1000); last=now;
+  const dtF=Math.min(0.05,(now-last)/1000); last=now;
+  let watts=IDLE_W;
   if(running){
     for(let s=0;s<warp;s++){
-      const driving=control(timeStep);
-      world.step(timeStep);
-      simT+=timeStep; energy(timeStep,driving,ingestAnims.length>0);
+      const {vT,wT}=targets(DT);
+      watts=driveStep(DT,vT,wT);
+      world.step(DT/2); world.step(DT/2);
+      simT+=DT; whUsed+=watts*DT/3600;
+      // intake check at nose
+      const y=yaw(), nx=botBody.position.x+Math.cos(y)*0.26, nz=botBody.position.z-Math.sin(y)*0.26;
+      for(const b of balls){if(b.live&&Math.hypot(b.body.position.x-nx,b.body.position.z-nz)<0.14&&collected<HOPPER_MAX)startIngest(b);}
     }
-    stepIngests(dt*warp);
+    stepIngests(dtF*warp);
   }
   for(const b of balls){if(b.live){b.mesh.position.copy(b.body.position);b.mesh.quaternion.copy(b.body.quaternion);}}
-  bot.position.copy(botBody.position); bot.quaternion.copy(botBody.quaternion);
+  // visuals follow body (group origin = CG)
+  bot.position.copy(botBody.position); bot.position.y-=cgHeight(collected);
+  bot.quaternion.copy(botBody.quaternion);
+  cgDot.position.copy(botBody.position);
   roller.rotation.z+=running?(state==='seek'?0.35:0.12)*warp:0;
+  wheelL.rotation.z+=botBody.velocity.length()/WHEEL_R*dtF*warp*0.9;
+  wheelR.rotation.z+=botBody.velocity.length()/WHEEL_R*dtF*warp*0.9;
   if(follow){
     const y=yaw();
-    const behind=new THREE.Vector3(botBody.position.x-Math.cos(y)*2.6,1.7,botBody.position.z+Math.sin(y)*2.6);
+    const behind=new THREE.Vector3(botBody.position.x-Math.cos(y)*2.6,botBody.position.y+1.6,botBody.position.z+Math.sin(y)*2.6);
     camera.position.lerp(behind,0.06); controls.target.lerp(bot.position,0.2);
   }
   controls.update(); renderer.render(scene,camera);
-  // hud
   document.getElementById('sState').textContent=state+(ingestAnims.length?' + ingesting':'');
+  document.getElementById('sSlip').innerHTML=slipNow?'<span class="slip">SLIP</span>':'';
   document.getElementById('sHop').textContent=collected;
   document.getElementById('sOut').textContent=balls.filter(b=>b.live).length;
   document.getElementById('sBat').textContent=Math.max(0,100*(1-whUsed/PACK_WH)).toFixed(1);
-  document.getElementById('sWh').textContent=whUsed.toFixed(1);
+  document.getElementById('sW').textContent=watts.toFixed(0);
+  document.getElementById('sCg').textContent=cgHeight(collected).toFixed(3);
+  document.getElementById('sGy').textContent=gyroOn?'on':'OFF';
   const mm=Math.floor(simT/60),ss=Math.floor(simT%60);
   document.getElementById('sTime').textContent=mm+':'+String(ss).padStart(2,'0');
   document.getElementById('sSpd').textContent=warp+'x';
 }
 document.getElementById('bGo').onclick=e=>{running=!running;e.target.textContent=running?'pause':'resume';};
 document.getElementById('bCam').onclick=e=>{follow=!follow;e.target.classList.toggle('on',follow);};
-document.getElementById('bWarp').onclick=e=>{warp=warp>=4?1:warp*2;e.target.textContent=(warp>=4?1:warp*2)+'x time';e.target.textContent=warp+'x time';};
+document.getElementById('bWarp').onclick=e=>{warp=warp>=4?1:warp*2;e.target.textContent=warp+'x time';};
+document.getElementById('bGy').onclick=e=>{gyroOn=!gyroOn;e.target.textContent='gyro limiter: '+(gyroOn?'ON':'OFF');e.target.classList.toggle('on',!gyroOn);};
 document.getElementById('bReset').onclick=()=>resetSession();
 addEventListener('resize',()=>{camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();renderer.setSize(stage.clientWidth,stage.clientHeight);});
 
-// debug hooks for verification
-window.__fetch={dbg(){return{vx:+botBody.velocity.x.toFixed(4),vz:+botBody.velocity.z.toFixed(4),yaw:+yaw().toFixed(3),sleep:botBody.sleepState,ds:window.__ds||-99,cur:window.__cur||-99};},setPos(x,z,hd){botBody.position.x=x;botBody.position.z=z;botBody.quaternion.setFromEuler(0,hd||0,0);},setHopper(n){collected=n;botBody.mass=BASE_M+n*BALL_M;botBody.updateMassProperties();for(let i=0;i<n;i++){const m=new THREE.Mesh(ballGeo,ballMat);const cols=5;m.position.set(-0.13+(i%cols)*0.066,0.02+Math.floor(i/(cols*3))*0.067,-0.085+(Math.floor(i/cols)%3)*0.066);hopBalls.add(m);}},bot:()=>({x:botBody.position.x,z:botBody.position.z,state,collected})};
+window.__fetch={
+  setPos(x,z,hd){botBody.position.set(x,cgHeight(collected),z);botBody.velocity.setZero();botBody.angularVelocity.setZero();botBody.quaternion.setFromEuler(0,hd||0,0);},
+  setHopper(n){collected=n;rebuildShapes(n);hopBalls.clear();for(let i=0;i<n;i++){const m=new THREE.Mesh(ballGeo,ballMat);const cols=5;m.position.set(-0.13+(i%cols)*0.066,0.02+Math.floor(i/(cols*3))*0.067,-0.085+(Math.floor(i/cols)%3)*0.066);hopBalls.add(m);}},
+  gyro(f){gyroOn=f;document.getElementById('bGy').textContent='gyro limiter: '+(f?'ON':'OFF');},
+  spin(){// force a hard turn for tip testing
+    botBody.velocity.set(0.6,0,0);
+  },
+  bot:()=>({x:botBody.position.x,z:botBody.position.z,y:botBody.position.y,state,collected,roll:(()=>{const e=new THREE.Euler().setFromQuaternion(bot.quaternion,'YXZ');return[e.x.toFixed(2),e.z.toFixed(2)];})()}),
+  dbg(){return{v:+botBody.velocity.length().toFixed(3),wy:+botBody.angularVelocity.y.toFixed(3),slip:slipNow};}
+};
 
 resetSession();
 loop(performance.now());
