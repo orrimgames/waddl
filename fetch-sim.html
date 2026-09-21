@@ -382,10 +382,12 @@ function driveStep(dt,vT,wT){
   }
   window.__dbg2={fL:+fL.toFixed(2),fR:+fR.toFixed(2),fSum:+fSum.toFixed(2),nL:+nL.toFixed(1),nR:+nR.toFixed(1),nC:+nCaster.toFixed(1),vBx:+vB.x.toFixed(3),vT:+vT.toFixed(2),wT:+wT.toFixed(2)};
   const _e=new THREE.Euler().setFromQuaternion(botBody.quaternion,'YXZ');
-  if(!window.__trip&&Math.abs(_e.z)>0.5){
+  (window.__hist=window.__hist||[]).push({r:[+_e.x.toFixed(2),+_e.z.toFixed(2)],vBx:+vB.x.toFixed(2),wB:[+wB.x.toFixed(1),+wB.y.toFixed(1),+wB.z.toFixed(1)],nC:+nCaster.toFixed(0),f:[+fL.toFixed(1),+fR.toFixed(1)],gB:[+gB.x.toFixed(2),+gB.z.toFixed(2)]});
+  if(window.__hist.length>90)window.__hist.shift();
+  if(!window.__trip&&(Math.abs(_e.z)>0.5||Math.abs(_e.x)>0.5)){
     let nd=1e9,bv=null;
     for(const b of balls){if(!b.live)continue;const d=Math.hypot(b.body.position.x-botBody.position.x,b.body.position.z-botBody.position.z);if(d<nd){nd=d;bv=+b.body.velocity.length().toFixed(2);}}
-    window.__trip={t:+simT.toFixed(2),pitch:+_e.z.toFixed(2),roll:+_e.x.toFixed(2),yawNow:+_e.y.toFixed(2),wB:[+wB.x.toFixed(2),+wB.y.toFixed(2),+wB.z.toFixed(2)],vB:[+vB.x.toFixed(2),+vB.y.toFixed(2),+vB.z.toFixed(2)],nC:+nCaster.toFixed(1),nL:+nL.toFixed(1),nR:+nR.toFixed(1),fL:+fL.toFixed(1),fR:+fR.toFixed(1),gB:[+gB.x.toFixed(2),+gB.y.toFixed(2),+gB.z.toFixed(2)],nearestBall:+nd.toFixed(2),ballV:bv,contacts:world.contacts.length,col:collected};
+    window.__trip={hist:window.__hist.slice(-40),t:+simT.toFixed(2),pitch:+_e.z.toFixed(2),roll:+_e.x.toFixed(2),yawNow:+_e.y.toFixed(2),wB:[+wB.x.toFixed(2),+wB.y.toFixed(2),+wB.z.toFixed(2)],vB:[+vB.x.toFixed(2),+vB.y.toFixed(2),+vB.z.toFixed(2)],nC:+nCaster.toFixed(1),nL:+nL.toFixed(1),nR:+nR.toFixed(1),fL:+fL.toFixed(1),fR:+fR.toFixed(1),gB:[+gB.x.toFixed(2),+gB.y.toFixed(2),+gB.z.toFixed(2)],nearestBall:+nd.toFixed(2),ballV:bv,contacts:world.contacts.length,col:collected};
   }
   // electrical power from motor currents (honest energy)
   const perW=Math.max(0,(Math.abs(fL)+Math.abs(fR))/2)*WHEEL_R; // avg torque N*m
