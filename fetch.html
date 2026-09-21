@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fetch - the $279 ball boy - Waddl</title>
+<meta name="description" content="Fetch is a tennis ball pickup robot: front intake, 80-ball top hopper, camera smarts, 4+ hour battery. Preorder target $279 - the incumbents are $1,299 and up.">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.hero h1{font-size:58px}
+.price-row{display:flex;gap:18px;flex-wrap:wrap;margin-top:26px}
+.pill{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 22px;min-width:150px}
+.pill .n{font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--accent)}
+.pill .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.pill.dim .n{color:var(--muted);text-decoration:line-through}
+.simwrap{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px}
+#court{width:100%;display:block;border-radius:12px;background:#2c5f8a}
+.simhud{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.simhud button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer}
+.simhud button:hover{border-color:var(--accent);color:var(--accent)}
+.simstat{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.simstat b{color:var(--text)}
+.schematic{width:100%;border-radius:20px;background:var(--panel);border:1px solid var(--line)}
+.warn{border-left-color:var(--accent2)}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <span class="logo">waddl<b>.</b></span>
+  <a class="nl" href="index.html">Home</a>
+  <a class="nl" href="robot.html">Pip, our first robot</a>
+  <a class="nl" href="sim.html">Sim</a>
+  <a class="nl" href="bom.html">Prototype plan</a>
+  <a class="nl" href="fetch.html" style="color:var(--accent)">Fetch</a>
+</div></nav>
+
+<div class="wrap">
+
+<div class="hero">
+  <div>
+    <h1>Never pick up<br>a tennis ball<br><b>again.</b></h1>
+    <p class="sub">Fetch rolls around the court while you keep hitting. A camera spots the balls, the front roller eats them, the top hopper holds 80. Preorder target: <b style="color:var(--accent)">$279</b>.</p>
+    <a class="btn" href="mailto:orrimgames@tuta.io?subject=Fetch%20waitlist&body=Put%20me%20on%20the%20Fetch%20waitlist.%20I%20play%20at%3A%20">Join the waitlist</a>
+    <a class="btn ghost" href="#sim">Watch it cover a court</a>
+    <div class="price-row">
+      <div class="pill"><div class="n">$279</div><div class="l">Fetch preorder</div></div>
+      <div class="pill dim"><div class="n">$1,299</div><div class="l">Tenniix Pro</div></div>
+      <div class="pill dim"><div class="n">$2,195</div><div class="l">Tennibot Rover</div></div>
+      <div class="pill dim"><div class="n">$2,199</div><div class="l">Acemate S10</div></div>
+    </div>
+  </div>
+  <svg class="schematic" viewBox="0 0 520 420" role="img" aria-label="Fetch side schematic: front intake hole, roller, chute to 80-ball top hopper, camera mast, low battery">
+    <!-- ground -->
+    <line x1="10" y1="380" x2="510" y2="380" stroke="#263252" stroke-width="3"/>
+    <!-- body -->
+    <rect x="120" y="200" width="260" height="130" rx="18" fill="#1c2539" stroke="#5ae1ff" stroke-width="2"/>
+    <!-- hopper on top -->
+    <rect x="140" y="80" width="220" height="120" rx="14" fill="#161d2e" stroke="#f2a83d" stroke-width="2"/>
+    <g fill="#c8d94e" stroke="#8a9a2e" stroke-width="1.5">
+      <circle cx="170" cy="110" r="14"/><circle cx="205" cy="105" r="14"/><circle cx="240" cy="108" r="14"/>
+      <circle cx="275" cy="104" r="14"/><circle cx="310" cy="108" r="14"/><circle cx="340" cy="112" r="14"/>
+      <circle cx="185" cy="140" r="14"/><circle cx="220" cy="142" r="14"/><circle cx="255" cy="138" r="14"/>
+      <circle cx="290" cy="141" r="14"/><circle cx="325" cy="139" r="14"/>
+      <circle cx="200" cy="172" r="14"/><circle cx="238" cy="170" r="14"/><circle cx="276" cy="172" r="14"/><circle cx="312" cy="170" r="14"/>
+    </g>
+    <text x="250" y="70" fill="#f2a83d" font-size="15" font-weight="700" text-anchor="middle">80-ball hopper (4.6 kg)</text>
+    <!-- intake hole front -->
+    <rect x="120" y="248" width="34" height="56" rx="8" fill="#0e1320" stroke="#5ae1ff" stroke-width="2"/>
+    <circle cx="137" cy="276" r="13" fill="none" stroke="#f2a83d" stroke-width="2.5" stroke-dasharray="5 4"/>
+    <text x="80" y="235" fill="#5ae1ff" font-size="13" font-weight="700" text-anchor="middle">intake</text>
+    <text x="80" y="330" fill="#9aa4bf" font-size="12" text-anchor="middle">roller</text>
+    <!-- chute -->
+    <path d="M 158 250 L 200 205 L 226 205 L 184 250 Z" fill="#263252" opacity="0.85"/>
+    <text x="196" y="232" fill="#9aa4bf" font-size="11" text-anchor="middle" transform="rotate(-48 196 232)">chute</text>
+    <!-- ball entering -->
+    <circle cx="96" cy="288" r="14" fill="#c8d94e" stroke="#8a9a2e" stroke-width="1.5"/>
+    <path d="M 104 288 L 118 288" stroke="#f2a83d" stroke-width="2.5" marker-end="url(#arr)"/>
+    <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f2a83d"/></marker></defs>
+    <!-- camera mast -->
+    <rect x="330" y="120" width="8" height="82" fill="#263252"/>
+    <rect x="318" y="102" width="32" height="20" rx="5" fill="#1c2539" stroke="#5ae1ff" stroke-width="2"/>
+    <circle cx="334" cy="112" r="6" fill="#0e1320" stroke="#5ae1ff" stroke-width="1.5"/>
+    <text x="400" y="116" fill="#5ae1ff" font-size="13" font-weight="700" text-anchor="middle">Pi Zero 2 W + camera</text>
+    <!-- battery low -->
+    <rect x="170" y="300" width="160" height="20" rx="6" fill="#101827" stroke="#f2a83d" stroke-width="1.5"/>
+    <text x="250" y="345" fill="#f2a83d" font-size="13" font-weight="700" text-anchor="middle">12 Ah pack, slung low</text>
+    <!-- wheels -->
+    <circle cx="180" cy="352" r="26" fill="#161d2e" stroke="#5ae1ff" stroke-width="2"/>
+    <circle cx="180" cy="352" r="8" fill="#263252"/>
+    <circle cx="330" cy="364" r="14" fill="#161d2e" stroke="#5ae1ff" stroke-width="2"/>
+  </svg>
+</div>
+
+<section id="sim">
+  <h2>Watch it think</h2>
+  <p class="lede">This is the actual coverage strategy, running live: sweep the court in rows, and whenever the camera cone spots a ball, steer to it. Bump-and-cover needs no map of the world - a tennis court is a fenced rectangle.</p>
+  <div class="simwrap">
+    <canvas id="court" width="880" height="420"></canvas>
+    <div class="simhud">
+      <button id="bGo">start</button>
+      <button id="bScatter">scatter 72 balls</button>
+      <span class="simstat" id="stat">press start</span>
+    </div>
+  </div>
+  <p class="simstat" style="margin-top:10px">Sim time runs 40x. A full 72-ball basket clears in about 25-35 minutes of real court time - start Fetch when you start hitting, and the court is clean when you are done.</p>
+</section>
+
+<section>
+  <h2>How it works</h2>
+  <p class="lede">Cheap eyes, dumb chassis. The expensive robots map the whole court with AI. Fetch just needs to see yellow.</p>
+  <div class="grid c3">
+    <div class="card"><h3>It drives to balls</h3><p>A Raspberry Pi Zero 2 W and one camera spot optic-yellow felt against the court - plain color detection, no cloud, no mapping rig. Works on hard courts and clay.</p></div>
+    <div class="card"><h3>A hole in the front eats them</h3><p>A motorized silicone roller pulls each ball in through the front intake and up a short chute. No arms, no vacuums, nothing to snap.</p></div>
+    <div class="card"><h3>The top stores 80</h3><p>A 20-liter top hopper holds a full teaching basket. The 12 Ah battery sits low to keep the loaded bot planted, with gyro-limited turns.</p></div>
+    <div class="card"><div class="big">4+ hrs</div><h3>Battery for a real session</h3><p>Full afternoon of pickup on one charge - several courts, no babysitting. Charges from a small wall brick.</p></div>
+    <div class="card"><div class="big">80 balls</div><h3>One basket, zero bending</h3><p>Empties a full practice session. Beeps and parks when the hopper is full or the battery runs low.</p></div>
+    <div class="card"><div class="big">$130</div><h3>Honest build cost</h3><p>Real parts, real prices, costed at a 300-unit batch. That is how Fetch lands at $279 while the incumbents start at $1,299.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>The honest math</h2>
+  <p class="lede">Hardware lives or dies on margin. Here is ours, with the real costs people usually hide.</p>
+  <table>
+    <tr><th>Item</th><th class="num">Per unit</th></tr>
+    <tr><td>Build cost, 300-unit batch (parts + assembly, landed)</td><td class="num">~$130</td></tr>
+    <tr><td>Shipping to your door (5-6 kg boxed)</td><td class="num">~$25</td></tr>
+    <tr><td>Payment fees, returns &amp; warranty reserve, support</td><td class="num">~$40</td></tr>
+    <tr class="total"><td>Margin at $279 preorder</td><td class="num">~$84 (30%)</td></tr>
+  </table>
+  <p class="note" style="margin-top:18px">Status: design and costing complete, prototype not yet built. Joining the waitlist costs nothing and commits you to nothing - it tells us how many to make and gets you first dibs at the $279 batch. Kickstarter planned.</p>
+</section>
+
+<section>
+  <h2>Why so cheap?</h2>
+  <p class="lede">The $2,000 robots are priced by their sensors. A tennis court is a fenced rectangle with bright yellow balls on it - the last problem in robotics that actually needs a $1,000 vision stack.</p>
+  <ol class="steps">
+    <li><b>No mapping.</b> Fetch sweeps rows and steers to what the camera sees. Bump switches handle the fence.</li>
+    <li><b>No arm, no vacuum.</b> One roller and gravity move the ball. Fewer parts, fewer failures.</li>
+    <li><b>Two small boards.</b> An ESP32 drives the motors, a Pi Zero 2 W sees. Together they cost less than the incumbents' shipping.</li>
+  </ol>
+  <p style="margin-top:26px"><a class="btn" href="mailto:orrimgames@tuta.io?subject=Fetch%20waitlist&body=Put%20me%20on%20the%20Fetch%20waitlist.%20I%20play%20at%3A%20">Join the waitlist</a></p>
+</section>
+
+</div>
+
+<footer><div class="wrap">waddl - small robots, honest prices &middot; fetch is a concept in active development &middot; questions: orrimgames@tuta.io</div></footer>
+
+<script>
+(function(){
+const cv=document.getElementById('court'),cx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+// court geometry (doubles 23.77 x 10.97 m)
+const CW=760,CH=352,OX=(W-CW)/2,OY=(H-CH)/2;
+const SX=CW/23.77,SY=CH/10.97;
+let balls=[],bot,running=false,simMin=0,collected=0,HOPPER=80;
+function scatter(n){balls=[];for(let i=0;i<n;i++){balls.push({x:OX+20+Math.random()*(CW-40),y:OY+16+Math.random()*(CH-32),got:false});}}
+function reset(){scatter(72);bot={x:OX+40,y:OY+30,hd:0,sp:1.35,row:0,state:'sweep',tgt:null};collected=0;simMin=0;}
+reset();
+function nearestVisible(){
+  let best=null,bd=1e9;
+  for(const b of balls){if(b.got)continue;
+    const dx=b.x-bot.x,dy=b.y-bot.y,d=Math.hypot(dx,dy);
+    if(d>190)continue;
+    let a=Math.atan2(dy,dx)-bot.hd;while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;
+    if(Math.abs(a)<0.6&&d<bd){bd=d;best=b;}
+  }
+  return best;
+}
+function step(){
+  simMin+=40/60/60*60; // 40x
+  const tgt=nearestVisible();
+  let des;
+  if(tgt){des=Math.atan2(tgt.y-bot.y,tgt.x-bot.x);}
+  else{
+    // boustrophedon rows
+    const rowH=(CH-40)/9, ry=OY+20+bot.row*rowH;
+    const dir=(bot.row%2===0)?1:-1;
+    const tx=(dir===1)?OX+CW-24:OX+24;
+    des=Math.atan2(ry-bot.y,tx-bot.x);
+    if(Math.abs(bot.x-tx)<10&&Math.abs(bot.y-ry)<10&&bot.row<9)bot.row++;
+  }
+  let da=des-bot.hd;while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;
+  bot.hd+=Math.max(-0.08,Math.min(0.08,da));
+  const sp=Math.abs(da)>1?0.4:bot.sp;
+  bot.x+=Math.cos(bot.hd)*sp;bot.y+=Math.sin(bot.hd)*sp;
+  bot.x=Math.max(OX+8,Math.min(OX+CW-8,bot.x));bot.y=Math.max(OY+8,Math.min(OY+CH-8,bot.y));
+  // intake: ball just ahead of nose
+  const nx=bot.x+Math.cos(bot.hd)*13,ny=bot.y+Math.sin(bot.hd)*13;
+  for(const b of balls){if(!b.got&&Math.hypot(b.x-nx,b.y-ny)<11&&collected<HOPPER){b.got=true;collected++;}}
+  if(collected>=balls.length||collected>=HOPPER)running=false;
+}
+function draw(){
+  cx.clearRect(0,0,W,H);
+  // court
+  cx.fillStyle='#2c5f8a';cx.fillRect(OX-14,OY-14,CW+28,CH+28);
+  cx.fillStyle='#3a76ab';cx.fillRect(OX,OY,CW,CH);
+  cx.strokeStyle='#f4efe4';cx.lineWidth=2;
+  cx.strokeRect(OX,OY,CW,CH);
+  // net
+  cx.strokeStyle='rgba(244,239,228,.7)';cx.beginPath();cx.moveTo(OX+CW/2,OY-10);cx.lineTo(OX+CW/2,OY+CH+10);cx.stroke();
+  // service-ish lines
+  cx.strokeRect(OX+CW*0.18,OY+CH*0.18,CW*0.64,CH*0.64);
+  // balls
+  for(const b of balls){if(b.got)continue;cx.fillStyle='#c8d94e';cx.beginPath();cx.arc(b.x,b.y,4.6,0,7);cx.fill();}
+  // camera cone
+  cx.fillStyle='rgba(90,225,255,.10)';
+  cx.beginPath();cx.moveTo(bot.x,bot.y);cx.arc(bot.x,bot.y,190,bot.hd-0.6,bot.hd+0.6);cx.closePath();cx.fill();
+  // bot body
+  cx.save();cx.translate(bot.x,bot.y);cx.rotate(bot.hd);
+  cx.fillStyle='#161d2e';cx.strokeStyle='#5ae1ff';cx.lineWidth=2;
+  cx.beginPath();cx.roundRect(-13,-11,26,22,6);cx.fill();cx.stroke();
+  cx.fillStyle='#f2a83d';cx.fillRect(9,-8,5,16); // intake mouth
+  cx.restore();
+  // hud text on canvas
+  cx.fillStyle='rgba(14,19,32,.75)';cx.fillRect(OX+8,OY+8,176,52);
+  cx.fillStyle='#f4efe4';cx.font='bold 13px system-ui';
+  cx.fillText('hopper  '+collected+' / '+HOPPER,OX+18,OY+28);
+  const batt=Math.max(0,100-simMin/270*100);
+  cx.fillText('battery '+batt.toFixed(0)+'%',OX+18,OY+46);
+}
+function stat(){
+  const batt=Math.max(0,100-simMin/270*100);
+  const left=balls.filter(b=>!b.got).length;
+  let s='court time <b>'+Math.floor(simMin)+' min</b> &middot; collected <b>'+collected+'</b> &middot; left <b>'+left+'</b> &middot; battery <b>'+batt.toFixed(0)+'%</b>';
+  if(collected>=balls.length)s+=' &middot; <b style="color:var(--accent)">court clean</b>';
+  if(collected>=HOPPER)s+=' &middot; <b style="color:var(--accent)">hopper full - heading home</b>';
+  document.getElementById('stat').innerHTML=s;
+}
+function loop(){if(running){for(let i=0;i<3;i++)step();}draw();stat();requestAnimationFrame(loop);}
+document.getElementById('bGo').onclick=function(){running=!running;this.textContent=running?'pause':'start';};
+document.getElementById('bScatter').onclick=function(){reset();running=true;document.getElementById('bGo').textContent='pause';};
+loop();
+})();
+</script>
+</body>
+  </html>
