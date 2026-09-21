@@ -144,7 +144,7 @@ function person(x,z){
   head.position.y=1.78; g.add(head);
   g.position.set(x,0,z); g.traverse(o=>{o.castShadow=true;}); scene.add(g);
   legs.userData.person=true; obstacles.push(legs,torso);
-  world.addBody(new CANNON.Body({mass:0,material:matBot,shape:new CANNON.Cylinder(0.17,0.17,1.85,8),position:new CANNON.Vec3(x,0.92,z)}));
+  world.addBody(new CANNON.Body({mass:0,material:matBot,shape:new CANNON.Box(new CANNON.Vec3(0.17,0.92,0.17)),position:new CANNON.Vec3(x,0.92,z)}));
   return g;
 }
 person(2.6,-1.4); person(-3.4,2.1);
@@ -169,7 +169,7 @@ function spawnBalls(n){
 const botBody=new CANNON.Body({mass:BASE_M,material:matBot,position:new CANNON.Vec3(-CT_L/2+1,0.3,-CT_W/2+1)});
 botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.21,0.10,0.17)),new CANNON.Vec3(0,-0.10,0)); // chassis slab (low = battery)
 botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.19,0.10,0.15)),new CANNON.Vec3(0,0.16,0));  // hopper block
-botBody.fixedRotation=true; botBody.updateMassProperties(); world.addBody(botBody);
+botBody.fixedRotation=true; botBody.allowSleep=false; botBody.updateMassProperties(); world.addBody(botBody);
 
 const bot=new THREE.Group();
 const chassis=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.20,0.34),new THREE.MeshStandardMaterial({color:0x2b3a5c}));
@@ -298,7 +298,9 @@ function control(dt){
   const dv=Math.max(-ACCEL*dt,Math.min(ACCEL*dt,desiredSpeed-cur));
   const nsp=Math.max(-0.4,Math.min(TOP_SPEED,cur+dv));
   botBody.velocity.set(heading.x*nsp,0,heading.z*nsp);
-  botBody.angularVelocity.set(0,Math.max(-TURN_CAP,Math.min(TURN_CAP,desiredYawRate)),0);
+  const yr=Math.max(-TURN_CAP,Math.min(TURN_CAP,desiredYawRate));
+  botBody.quaternion.setFromEuler(0,yaw()+yr*dt,0);
+  botBody.angularVelocity.set(0,0,0);
   return Math.abs(nsp)>0.05;
 }
 
