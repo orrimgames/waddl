@@ -327,11 +327,11 @@ function driveStep(dt,vT,wT){
   const tz=-gB.z/u, tx=-gB.x/u;                 // ground-plane tilt (tangent), body frame
   const aLat=Math.max(-20,Math.min(20,vB.x*wY));
   // normal forces (quasi-static rigid-body equilibrium + accel AND gravity-tilt transfer)
-  let nCaster=m*aX*h/(-CASTER_X)-m*9.82*h*tx/(-CASTER_X);
+  let nCaster=m*aX*h/(-CASTER_X)+m*9.82*h*tx/(-CASTER_X);
   nCaster=Math.max(0,Math.min(m*9.82,nCaster));
   let nDrive=m*9.82-nCaster;
-  let nL=nDrive/2+m*aLat*h/TRACK+m*9.82*h*tz/TRACK;
-  let nR=nDrive/2-m*aLat*h/TRACK-m*9.82*h*tz/TRACK;
+  let nL=nDrive/2+m*aLat*h/TRACK-m*9.82*h*tz/TRACK;
+  let nR=nDrive/2-m*aLat*h/TRACK+m*9.82*h*tz/TRACK;
   nL=Math.max(0,nL); nR=Math.max(0,nR);
   if(-gB.y<0.25){window.__dbg2={tipped:true,v:+botBody.velocity.length().toFixed(2)};return IDLE_W;} // fallen: contacts own the body
   // traction limits, slip detection
