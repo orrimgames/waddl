@@ -312,7 +312,7 @@ const _f=new CANNON.Vec3(), _p=new CANNON.Vec3(), _up=new CANNON.Vec3(), _zero=n
 function driveStep(dt,vT,wT){
   const m=botBody.mass, h=cgHeight(collected);
   // body-frame velocity
-  const q=botBody.quaternion, iq=q.clone(); iq.conjugate();
+  const q=botBody.quaternion, iq=q.clone(); iq.conjugate(iq); // conjugate(target) returns a NEW quaternion without a target - must pass iq
   const vB=iq.vmult(botBody.velocity);
   const wY=botBody.angularVelocity.y;
   const wB=iq.vmult(botBody.angularVelocity);
@@ -416,7 +416,7 @@ function loop(now){
       simT+=DT; whUsed+=watts*DT/3600;
       // intake check at nose
       // intake: full-width mouth zone at the nose - balls reaching the front get scooped, not jammed
-      const _iq=botBody.quaternion.clone(); _iq.conjugate();
+      const _iq=botBody.quaternion.clone(); _iq.conjugate(_iq);
       for(const b of balls){
         if(!b.live||collected>=HOPPER_MAX)continue;
         const rel=_iq.vmult(new CANNON.Vec3(b.body.position.x-botBody.position.x,b.body.position.y-botBody.position.y,b.body.position.z-botBody.position.z));
