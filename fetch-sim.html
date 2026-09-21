@@ -37,7 +37,7 @@
 <div id="stage">
   <div id="title">
     <h1>Fetch, fully simulated</h1>
-    <p>Every force is real: gearmotor torque curves, rubber-on-court traction, weight transfer, and a center of gravity that climbs as 80 balls load the top hopper. Fill it up, switch the gyro limiter off, and you can tip it - that is the point.</p>
+    <p>Every force is real: gearmotor torque curves, rubber-on-court traction, weight transfer, and a center of gravity that climbs as 80 balls load the top hopper. The CG sits 3cm behind the drive axle because the sim proved it must. Fill the hopper, switch the gyro limiter off, drive it into things - the physics decides what happens.</p>
   </div>
   <div id="stats">
     status <b class="st" id="sState">booting</b> <span id="sSlip"></span><br>
@@ -73,7 +73,7 @@ const BALL_R=0.0335, BALL_M=0.058, BALL_REST=0.72;
 const BASE_M=5.0, BASE_H=0.10;              // chassis+12Ah pack, low
 const SHELL_M=0.3, LOAD_H=0.40;             // hopper shell + ball load height
 const HOPPER_MAX=80;
-const WHEEL_R=0.07, TRACK=0.38, CASTER_X=-0.17;
+const WHEEL_R=0.07, TRACK=0.38, CASTER_X=-0.17, CG_BACK=0.03; // CG sits 3cm behind the drive axle: static caster load gives real pitch stability
 const T_STALL=1.0, W_NL=10.47, V_BUS=12, I_NL=0.15, I_STALL=5.0, GEAR_ETA=0.55; // GB37-class 12V
 const MU_S=0.9, MU_K=0.7, C_RR=0.02;        // rubber on acrylic hard court
 const TURN_CAP=1.4, TURN_CAP_OFF=3.2;
@@ -320,7 +320,7 @@ function driveStep(dt,vT,wT){
   // speed + yaw P control
   let fSum=6.0*m*(vT-vB.x);                                     // P on forward speed
   let fDif=9.0*(wT-wY);                                         // P on yaw rate
-  fSum=Math.max(-2*fStall,Math.min(2*fMotor+2,fSum));
+  fSum=Math.max(-2.0*m,Math.min(2*fMotor+2,fSum)); // reverse/brake capped at 2 m/s2 like real firmware - keeps the caster loaded
   // wheel split BEFORE normals: pitch balance must use the ACTUAL applied force
   let fL=Math.max(-fStall,Math.min(fMotor,fSum/2+fDif));
   let fR=Math.max(-fStall,Math.min(fMotor,fSum/2-fDif));
@@ -331,7 +331,7 @@ function driveStep(dt,vT,wT){
   const tz=-gB.z/u, tx=-gB.x/u;                 // ground-plane tilt (tangent), body frame
   const aLat=Math.max(-20,Math.min(20,vB.x*wY));
   // normal forces (quasi-static rigid-body equilibrium + accel AND gravity-tilt transfer)
-  let nCaster=m*aX*h/(-CASTER_X)+m*9.82*h*tx/(-CASTER_X)+8.0*wB.z/(-CASTER_X);
+  let nCaster=m*9.82*CG_BACK/(-CASTER_X)+m*aX*h/(-CASTER_X)+m*9.82*h*tx/(-CASTER_X)+8.0*wB.z/(-CASTER_X);
   nCaster=Math.max(0,Math.min(m*9.82,nCaster));
   let nDrive=m*9.82-nCaster;
   let nL=nDrive/2+m*aLat*h/TRACK-m*9.82*h*tz/TRACK+8.0*wB.x/TRACK;
@@ -348,7 +348,7 @@ function driveStep(dt,vT,wT){
   // apply longitudinal forces at the two drive-wheel contact patches
   const fwdW=q.vmult(new CANNON.Vec3(1,0,0));
   for(const [f,z] of [[fL,TRACK/2],[fR,-TRACK/2]]){
-    _p.copy(q.vmult(new CANNON.Vec3(0,-h,z))); // relative to COM, world orientation
+    _p.copy(q.vmult(new CANNON.Vec3(CG_BACK,-h,z))); // wheel patches: geometry sits CG_BACK ahead of COM
     _f.set(fwdW.x*f,0,fwdW.z*f);
     botBody.applyForce(_f,_p);
   }
@@ -356,7 +356,7 @@ function driveStep(dt,vT,wT){
   _f.set(fwdW.x*fRR,0,fwdW.z*fRR);
   botBody.applyForce(_f,_zero);
   // support (normal) forces at the three contact points
-  for(const [n,x,z] of [[nL,0,TRACK/2],[nR,0,-TRACK/2],[nCaster,CASTER_X,0]]){
+  for(const [n,x,z] of [[nL,CG_BACK,TRACK/2],[nR,CG_BACK,-TRACK/2],[nCaster,CASTER_X+CG_BACK,0]]){
     if(n<=0)continue;
     _p.copy(q.vmult(new CANNON.Vec3(x,-h,z)));
     _up.set(0,n,0);
@@ -364,7 +364,7 @@ function driveStep(dt,vT,wT){
   }
   // lateral tire friction per contact (traction-circle budget after longitudinal)
   const latDirW=q.vmult(new CANNON.Vec3(0,0,1));
-  for(const [n,x,z,fLon] of [[nL,0,TRACK/2,fL],[nR,0,-TRACK/2,fR],[nCaster,CASTER_X,0,0]]){
+  for(const [n,x,z,fLon] of [[nL,CG_BACK,TRACK/2,fL],[nR,CG_BACK,-TRACK/2,fR],[nCaster,CASTER_X+CG_BACK,0,0]]){
     if(n<=0)continue;
     const rel=q.vmult(new CANNON.Vec3(x,-h,z));
     // point velocity: v + w x rel
@@ -408,7 +408,8 @@ function loop(now){
   }
   for(const b of balls){if(b.live){b.mesh.position.copy(b.body.position);b.mesh.quaternion.copy(b.body.quaternion);}}
   // visuals follow body (group origin = CG)
-  bot.position.copy(botBody.position); bot.position.y-=cgHeight(collected);
+  const cgOff=new THREE.Vector3(-CG_BACK,cgHeight(collected),0).applyQuaternion(botBody.quaternion);
+  bot.position.copy(botBody.position).sub(cgOff);
   bot.quaternion.copy(botBody.quaternion);
   cgDot.position.copy(botBody.position);
   roller.rotation.z+=running?(state==='seek'?0.35:0.12)*warp:0;
