@@ -369,6 +369,7 @@ function driveStep(dt,vT,wT){
     _f.set(latDirW.x*fLat,0,latDirW.z*fLat);
     botBody.applyForce(_f,rel);
   }
+  window.__dbg2={fL:+fL.toFixed(2),fR:+fR.toFixed(2),fSum:+fSum.toFixed(2),nL:+nL.toFixed(1),nR:+nR.toFixed(1),nC:+nCaster.toFixed(1),vBx:+vB.x.toFixed(3),vT:+vT.toFixed(2),wT:+wT.toFixed(2)};
   // electrical power from motor currents (honest energy)
   const perW=Math.max(0,(Math.abs(fL)+Math.abs(fR))/2)*WHEEL_R; // avg torque N*m
   const cur=I_NL+(I_STALL-I_NL)*(perW/T_STALL);
