@@ -227,7 +227,7 @@ bot.add(hopBalls);
 // ---------- state ----------
 let running=true, warp=1, follow=false, gyroOn=true;
 let collected=0, whUsed=0, simT=0, state='sweep', slipNow=false;
-let row=0, dirSign=1, avoidT=0, avoidDir=1, ingestAnims=[]; let lastVT=0,lastVBx=0,stallT=0;
+let row=0, dirSign=1, avoidT=0, avoidDir=1, ingestAnims=[]; let lastVT=0,lastVBx=0,stallT=0; let stallN=0;
 const ROWS=6;
 
 function resetSession(){
@@ -284,8 +284,8 @@ function targets(dt){
   let vT=TOP_SPEED, wT=0;
   const cap=gyroOn?TURN_CAP:TURN_CAP_OFF;
   // stall detection: real firmware sees motor current spike with no motion (bump switch of last resort) and backs off
-  if(Math.abs(lastVT)>0.12&&Math.abs(lastVBx)<0.05){stallT+=dt;}else{stallT=0;}
-  if(stallT>0.6){stallT=0;if(state==='avoid'){avoidT=0.56;avoidDir*=-1;}else{state='avoid';avoidT=0;}}
+  if(Math.abs(lastVT)>0.12&&Math.abs(lastVBx)<0.5*Math.abs(lastVT)){stallT+=dt;}else{stallT=0;stallN=0;} // ratio test: a slow grind at 0.1 m/s against an obstacle still counts as stalled
+  if(stallT>0.6){stallT=0;stallN++;if(state!=='avoid'){state='avoid';avoidT=0;stallN=1;}else{avoidT=(stallN%2)?0:0.56;avoidDir*=-1;}} // alternate: re-reverse, then turn the other way
   if(state!=='avoid'&&(dC<0.85||dL<0.45||dR<0.45)){state='avoid';avoidT=0;avoidDir=(dL>dR)?-1:1;}
   if(state==='avoid'){
     avoidT+=dt;
@@ -345,7 +345,8 @@ function driveStep(dt,vT,wT){
   let nR=nDrive/2-m*aLat*h/TRACK+m*9.82*h*tz/TRACK;
   nL=Math.max(0,Math.min(m*9.82,nL)); nR=Math.max(0,Math.min(m*9.82,nR));
   nL*=ss; nR*=ss; nCaster*=ss;
-  fL*=ss;fR*=ss; // tilt safety FADES drive instead of hard-cutting: at moderate tilt the bot can still crawl off a ball beach; past 60 deg ss=0 and the cut is total
+  const sR=0.35+0.65*ss; // reverse authority floor: real firmware always lets you back out of trouble even while tilted
+  if(fL>0)fL*=ss;else fL*=sR; if(fR>0)fR*=ss;else fR*=sR; // forward drive fades with tilt; reverse keeps a floor
   if(ss<=0){window.__dbg2={tipped:true,v:+botBody.velocity.length().toFixed(2)};return IDLE_W;} // fallen: contacts own the body
   // traction limits, slip detection
   const tL=MU_S*nL, tR=MU_S*nR;
