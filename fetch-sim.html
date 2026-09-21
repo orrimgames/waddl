@@ -180,7 +180,7 @@ function rebuildShapes(n){
   // per-collect events update mass only - the CG climb lives in the drive model via cgHeight(collected).
   if(!botBody.shapes.length){
     const h=cgHeight(0);
-    botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.21,0.10,0.17)),new CANNON.Vec3(0,0.12-h,0)); // chassis+battery slab
+    botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.21,0.10,0.17)),new CANNON.Vec3(0,0.145-h,0)); // chassis+battery slab, 4.5cm belly clearance: lip strikes at 10.6 deg pitch, not 4.8
     botBody.addShape(new CANNON.Box(new CANNON.Vec3(0.19,0.10,0.15)),new CANNON.Vec3(0,LOAD_H-h,0)); // hopper block
   }
   botBody.mass=totalMass(n); botBody.updateMassProperties();
