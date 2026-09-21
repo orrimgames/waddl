@@ -345,7 +345,7 @@ function driveStep(dt,vT,wT){
   let nR=nDrive/2-m*aLat*h/TRACK+m*9.82*h*tz/TRACK;
   nL=Math.max(0,Math.min(m*9.82,nL)); nR=Math.max(0,Math.min(m*9.82,nR));
   nL*=ss; nR*=ss; nCaster*=ss;
-  if(ss<1){fL=0;fR=0;}
+  fL*=ss;fR*=ss; // tilt safety FADES drive instead of hard-cutting: at moderate tilt the bot can still crawl off a ball beach; past 60 deg ss=0 and the cut is total
   if(ss<=0){window.__dbg2={tipped:true,v:+botBody.velocity.length().toFixed(2)};return IDLE_W;} // fallen: contacts own the body
   // traction limits, slip detection
   const tL=MU_S*nL, tR=MU_S*nR;
@@ -423,7 +423,7 @@ function loop(now){
       for(const b of balls){
         if(!b.live||collected>=HOPPER_MAX)continue;
         const rel=_iq.vmult(new CANNON.Vec3(b.body.position.x-botBody.position.x,b.body.position.y-botBody.position.y,b.body.position.z-botBody.position.z));
-        if(rel.x>0.14&&rel.x<0.40&&Math.abs(rel.z)<0.24&&rel.y<0.25)startIngest(b); // mouth spans the full body width - nothing to jam against
+        if(rel.x>0.02&&rel.x<0.42&&Math.abs(rel.z)<0.26&&rel.y<0.30)startIngest(b); // mouth reaches under the nose lip: a ball half-wedged at the lip gets pulled in, not ridden over // mouth spans the full body width - nothing to jam against
       }
     }
     stepIngests(dtF*warp);
